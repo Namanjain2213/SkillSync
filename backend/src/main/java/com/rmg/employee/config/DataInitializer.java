@@ -18,27 +18,33 @@ public class DataInitializer {
         return args -> {
             if (userRepository.count() == 0) {
                 User admin = new User();
-                admin.setUsername("admin");
-                admin.setPassword(passwordEncoder.encode("admin123"));
+                admin.setEmployeeId("ADM001");
+                admin.setFullName("System Admin");
+                admin.setPassword(passwordEncoder.encode("Admin@1234"));
                 admin.setEmail("admin@company.com");
                 admin.setRole(Role.ADMIN);
                 userRepository.save(admin);
 
                 User hr = new User();
-                hr.setUsername("hr");
-                hr.setPassword(passwordEncoder.encode("hr123"));
+                hr.setEmployeeId("HR001");
+                hr.setFullName("HR Manager");
+                hr.setPassword(passwordEncoder.encode("Hr@12345"));
                 hr.setEmail("hr@company.com");
                 hr.setRole(Role.HR);
                 userRepository.save(hr);
 
                 User employee = new User();
-                employee.setUsername("employee");
-                employee.setPassword(passwordEncoder.encode("emp123"));
+                employee.setEmployeeId("EMP001");
+                employee.setFullName("Test Employee");
+                employee.setPassword(passwordEncoder.encode("Emp@1234"));
                 employee.setEmail("employee@company.com");
                 employee.setRole(Role.EMPLOYEE);
                 userRepository.save(employee);
 
-                System.out.println("Default users created: admin/admin123, hr/hr123, employee/emp123");
+                System.out.println("Default users created:");
+                System.out.println("  Admin    -> ID: ADM001  Password: Admin@1234");
+                System.out.println("  HR       -> ID: HR001   Password: Hr@12345");
+                System.out.println("  Employee -> ID: EMP001  Password: Emp@1234");
             }
 
             initSkill(mcqQuestionRepository, "JAVA",   100, () -> createJavaQuestions(mcqQuestionRepository));

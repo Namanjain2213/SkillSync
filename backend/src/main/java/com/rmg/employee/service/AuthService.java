@@ -14,16 +14,16 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
-    
+
     @Autowired
     private AuthenticationManager authenticationManager;
-    
+
     @Autowired
     private JwtTokenProvider tokenProvider;
-    
+
     @Autowired
     private UserRepository userRepository;
-    
+
     public LoginResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -31,13 +31,13 @@ public class AuthService {
                         loginRequest.getPassword()
                 )
         );
-        
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.generateToken(authentication);
-        
-        User user = userRepository.findByUsername(loginRequest.getUsername())
+
+        User user = userRepository.findByEmployeeId(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        return new LoginResponse(jwt, user.getUsername(), user.getRole().name(), "Login successful");
+
+        return new LoginResponse(jwt, user.getEmployeeId(), user.getRole().name(), "Login successful");
     }
 }

@@ -12,19 +12,19 @@ import java.util.Collections;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
-    
+
     @Autowired
     private UserRepository userRepository;
-    
+
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-        
+    public UserDetails loadUserByUsername(String employeeId) throws UsernameNotFoundException {
+        User user = userRepository.findByEmployeeId(employeeId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + employeeId));
+
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
+                user.getEmployeeId(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name()))
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
         );
     }
 }

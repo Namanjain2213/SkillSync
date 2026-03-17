@@ -21,22 +21,21 @@ import java.util.stream.Collectors;
 @Service
 public class EmployeeService {
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private McqQuestionRepository mcqQuestionRepository;
+    @Autowired private EmployeeRepository employeeRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private McqQuestionRepository mcqQuestionRepository;
 
     private static final List<String> MCQ_SKILLS = Arrays.asList("JAVA", "PYTHON", "AI_ML", "DOTNET");
     private static final String UPLOAD_DIR = "uploads/certifications/";
 
+    private User findUser(String employeeId) {
+        return userRepository.findByEmployeeId(employeeId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + employeeId));
+    }
+
     @Transactional
-    public EmployeeProfileResponse createProfile(String username, EmployeeProfileRequest request) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+    public EmployeeProfileResponse createProfile(String employeeId, EmployeeProfileRequest request) {
+        User user = findUser(employeeId);
 
         Employee employee = employeeRepository.findByUserId(user.getId())
                 .orElse(new Employee());
@@ -51,8 +50,6 @@ public class EmployeeService {
         employee.setUpdatedAt(LocalDateTime.now());
 
         employee = employeeRepository.save(employee);
-
-        // Create MCQ tests for required skills
         createMcqTestsForSkills(employee, request.getSkills());
         employee = employeeRepository.save(employee);
 
@@ -63,7 +60,6 @@ public class EmployeeService {
         if (skills == null) return;
         for (String skill : skills) {
             String normalizedSkill = skill.toUpperCase().replace(" ", "_").replace(".", "");
-            // Handle .NET -> DOTNET
             if (normalizedSkill.equals("NET") || normalizedSkill.equals("DOTNET") || skill.equalsIgnoreCase(".NET")) {
                 normalizedSkill = "DOTNET";
             }
@@ -73,7 +69,7 @@ public class EmployeeService {
             if (MCQ_SKILLS.contains(normalizedSkill)) {
                 final String finalSkill = normalizedSkill;
                 boolean testExists = employee.getMcqTests().stream()
-                        .anyMatch(test -> test.getSkill().equals(finalSkill));
+                        .anyMatch(t -> t.getSkill().equals(finalSkill));
                 if (!testExists) {
                     McqTest test = new McqTest();
                     test.setEmployee(employee);
@@ -86,17 +82,13 @@ public class EmployeeService {
     }
 
     @Transactional
-    public String uploadCertification(String username, String certificationName, MultipartFile file) throws IOException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+    public String uploadCertification(String employeeId, String certificationName, MultipartFile file) throws IOException {
+        User user = findUser(employeeId);
         Employee employee = employeeRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Employee profile not found"));
 
         Path uploadPath = Paths.get(UPLOAD_DIR);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
+        if (!Files.exists(uploadPath)) Files.createDirectories(uploadPath);
 
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
@@ -106,16 +98,13 @@ public class EmployeeService {
         certification.setName(certificationName);
         certification.setImagePath(fileName);
         employee.getCertifications().add(certification);
-
         employeeRepository.save(employee);
         return fileName;
     }
 
     @Transactional(readOnly = true)
-    public McqTestResponse generateTest(String username, String skill) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+    public McqTestResponse generateTest(String employeeId, String skill) {
+        User user = findUser(employeeId);
         Employee employee = employeeRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Employee profile not found"));
 
@@ -135,8 +124,7 @@ public class EmployeeService {
         Collections.shuffle(questions);
 
         if (questions.size() < 30) {
-            throw new RuntimeException("Not enough questions for skill: " + skill +
-                " (easy=" + easy.size() + ", moderate=" + moderate.size() + ", advanced=" + advanced.size() + ")");
+            throw new RuntimeException("Not enough questions for skill: " + skill);
         }
 
         McqTestResponse response = new McqTestResponse();
@@ -144,8 +132,7 @@ public class EmployeeService {
         response.setSkill(skill);
         response.setTotalQuestions(30);
         response.setTimeLimit(30);
-
-        List<McqQuestionDto> questionDtos = questions.stream().map(q -> {
+        response.setQuestions(questions.stream().map(q -> {
             McqQuestionDto dto = new McqQuestionDto();
             dto.setId(q.getId());
             dto.setQuestion(q.getQuestion());
@@ -155,17 +142,13 @@ public class EmployeeService {
             dto.setOptionD(q.getOptionD());
             dto.setDifficulty(q.getDifficulty().name());
             return dto;
-        }).collect(Collectors.toList());
-
-        response.setQuestions(questionDtos);
+        }).collect(Collectors.toList()));
         return response;
     }
 
     @Transactional
-    public McqTestDto submitTest(String username, TestSubmissionRequest request) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+    public McqTestDto submitTest(String employeeId, TestSubmissionRequest request) {
+        User user = findUser(employeeId);
         Employee employee = employeeRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Employee profile not found"));
 
@@ -187,7 +170,6 @@ public class EmployeeService {
         test.setScore(score);
         test.setCompletedDate(LocalDateTime.now());
         test.setStatus(score >= 60 ? TestStatus.PASSED : TestStatus.FAILED);
-
         employeeRepository.save(employee);
 
         McqTestDto dto = new McqTestDto();
@@ -203,10 +185,8 @@ public class EmployeeService {
     }
 
     @Transactional(readOnly = true)
-    public EmployeeProfileResponse getProfile(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
+    public EmployeeProfileResponse getProfile(String employeeId) {
+        User user = findUser(employeeId);
         return employeeRepository.findByUserId(user.getId())
                 .map(EmployeeProfileResponse::from)
                 .orElse(null);
