@@ -22,7 +22,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new LoginResponse(null, null, null, "Invalid credentials"));
+                    .body(new LoginResponse(null, null, null, null, "Invalid credentials"));
         }
     }
 }

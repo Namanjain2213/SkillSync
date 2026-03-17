@@ -61,4 +61,8 @@ export class EmployeeService {
   submitTest(submission: TestSubmission): Observable<any> {
     return this.http.post(`${environment.apiUrl}/employee/test/submit`, submission);
   }
+
+  getSuggestedProjects(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/employee/suggested-projects`);
+  }
 }

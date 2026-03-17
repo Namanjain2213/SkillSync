@@ -1,4 +1,5 @@
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\EmployeeManagementApplication.java
+F:\RMGManagement\backend\src\main\java\com\rmg\employee\service\ProjectService.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\config\DataInitializer.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\ProfileStatus.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\controller\AuthController.java
@@ -8,6 +9,9 @@ F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\McqTestDto.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\DifficultyLevel.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\service\AdminService.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\Employee.java
+F:\RMGManagement\backend\src\main\java\com\rmg\employee\controller\ProjectController.java
+F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\ProjectStatus.java
+F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\ProjectRequest.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\service\EmployeeService.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\service\AuthService.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\EmployeeProfileResponse.java
@@ -16,16 +20,19 @@ F:\RMGManagement\backend\src\main\java\com\rmg\employee\controller\EmployeeContr
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\Role.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\repository\EmployeeRepository.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\controller\AdminController.java
+F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\Project.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\repository\McqQuestionRepository.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\McqQuestion.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\repository\UserRepository.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\LoginRequest.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\McqQuestionDto.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\EmployeeProfileRequest.java
+F:\RMGManagement\backend\src\main\java\com\rmg\employee\repository\ProjectRepository.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\User.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\security\SecurityConfig.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\UserDto.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\McqTest.java
+F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\ProjectResponse.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\TestSubmissionRequest.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\CertificationDto.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\security\JwtAuthenticationFilter.java

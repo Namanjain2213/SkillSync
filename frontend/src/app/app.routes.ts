@@ -9,6 +9,11 @@ import { AdminShellComponent } from './features/admin/admin-shell.component';
 import { AdminDashboardComponent } from './features/admin/admin-dashboard.component';
 import { AdminUsersComponent } from './features/admin/admin-users.component';
 import { AdminCreateUserComponent } from './features/admin/admin-create-user.component';
+import { PmShellComponent } from './features/pm/pm-shell.component';
+import { PmDashboardComponent } from './features/pm/pm-dashboard.component';
+import { PmCreateProjectComponent } from './features/pm/pm-create-project.component';
+import { PmProjectsComponent } from './features/pm/pm-projects.component';
+import { PmCandidatesComponent } from './features/pm/pm-candidates.component';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -29,6 +34,16 @@ export const routes: Routes = [
       { path: '',       component: AdminDashboardComponent },
       { path: 'users',  component: AdminUsersComponent },
       { path: 'create', component: AdminCreateUserComponent },
+    ]
+  },
+  {
+    path: 'pm',
+    component: PmShellComponent,
+    children: [
+      { path: '',                              component: PmDashboardComponent },
+      { path: 'projects',                      component: PmProjectsComponent },
+      { path: 'create',                        component: PmCreateProjectComponent },
+      { path: 'projects/:id/candidates',       component: PmCandidatesComponent },
     ]
   },
   { path: '**', redirectTo: '/' }

@@ -41,10 +41,19 @@ public class DataInitializer {
                 employee.setRole(Role.EMPLOYEE);
                 userRepository.save(employee);
 
+                User pm = new User();
+                pm.setEmployeeId("PM001");
+                pm.setFullName("Project Manager");
+                pm.setPassword(passwordEncoder.encode("Pm@12345"));
+                pm.setEmail("pm@company.com");
+                pm.setRole(Role.PROJECT_MANAGER);
+                userRepository.save(pm);
+
                 System.out.println("Default users created:");
-                System.out.println("  Admin    -> ID: ADM001  Password: Admin@1234");
-                System.out.println("  HR       -> ID: HR001   Password: Hr@12345");
-                System.out.println("  Employee -> ID: EMP001  Password: Emp@1234");
+                System.out.println("  Admin   -> ID: ADM001  Password: Admin@1234");
+                System.out.println("  HR      -> ID: HR001   Password: Hr@12345");
+                System.out.println("  Employee-> ID: EMP001  Password: Emp@1234");
+                System.out.println("  PM      -> ID: PM001   Password: Pm@12345");
             }
 
             initSkill(mcqQuestionRepository, "JAVA",   100, () -> createJavaQuestions(mcqQuestionRepository));

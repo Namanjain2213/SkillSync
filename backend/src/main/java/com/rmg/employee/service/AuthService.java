@@ -38,6 +38,6 @@ public class AuthService {
         User user = userRepository.findByEmployeeId(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return new LoginResponse(jwt, user.getEmployeeId(), user.getRole().name(), "Login successful");
+        return new LoginResponse(jwt, user.getEmployeeId(), user.getRole().name(), user.getFullName(), "Login successful");
     }
 }

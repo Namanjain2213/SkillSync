@@ -234,9 +234,10 @@ export class LoginComponent {
   ];
 
   demos = [
-    { role: 'Employee', icon: 'user',      color: '#2e7d32', username: 'employee', password: 'emp123' },
-    { role: 'HR',       icon: 'users',     color: '#1565c0', username: 'hr',       password: 'hr123'  },
-    { role: 'Admin',    icon: 'shield',    color: '#6a1b9a', username: 'admin',    password: 'admin123'},
+    { role: 'Employee', icon: 'user',      color: '#2e7d32', username: 'EMP001', password: 'Emp@1234'  },
+    { role: 'HR',       icon: 'users',     color: '#1565c0', username: 'HR001',  password: 'Hr@12345'  },
+    { role: 'Admin',    icon: 'shield',    color: '#6a1b9a', username: 'ADM001', password: 'Admin@1234'},
+    { role: 'PM',       icon: 'layers',    color: '#e65100', username: 'PM001',  password: 'Pm@12345'  },
   ];
 
   constructor(
@@ -260,6 +261,7 @@ export class LoginComponent {
           if (response.role === 'EMPLOYEE') this.router.navigate(['/employee']);
           else if (response.role === 'HR')   this.router.navigate(['/hr']);
           else if (response.role === 'ADMIN') this.router.navigate(['/admin']);
+          else if (response.role === 'PROJECT_MANAGER') this.router.navigate(['/pm']);
         },
         error: () => {
           this.loading = false;

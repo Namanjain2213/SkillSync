@@ -170,6 +170,30 @@ import { IconComponent } from '../../shared/icon.component';
         </div>
       </div>
 
+      <!-- Suggested Projects -->
+      <div class="card full-card" *ngIf="suggestedProjects.length > 0">
+        <div class="card-header">
+          <span class="card-title">
+            <app-icon name="layers" [size]="15" color="#1a237e"></app-icon>
+            &nbsp;Suggested Projects
+          </span>
+          <span class="proj-count">{{ suggestedProjects.length }} match(es) based on your skills</span>
+        </div>
+        <div class="projects-grid">
+          <div class="proj-card" *ngFor="let p of suggestedProjects">
+            <div class="proj-top">
+              <div class="proj-name">{{ p.name }}</div>
+              <span class="proj-status status-{{ p.status.toLowerCase() }}">{{ p.status }}</span>
+            </div>
+            <div class="proj-desc">{{ p.description || 'No description provided.' }}</div>
+            <div class="proj-skills">
+              <span class="skill-tag match" *ngFor="let s of p.requiredSkills"
+                    [class.match]="isSkillMatch(s)">{{ s }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   `,
   styles: [`
@@ -316,11 +340,32 @@ import { IconComponent } from '../../shared/icon.component';
     .bar-red   { background: linear-gradient(90deg, #e53935, #ef5350); }
     .score-num { font-size: 13px; font-weight: 700; color: #333; min-width: 34px; text-align: right; }
     .test-pending { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #bbb; font-style: italic; }
+
+    /* SUGGESTED PROJECTS */
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; padding: 16px 18px; }
+    .proj-card {
+      border-radius: 12px; padding: 16px;
+      background: #f8fbff; border: 1.5px solid #d6eaf8;
+      display: flex; flex-direction: column; gap: 8px;
+      transition: border-color 0.15s;
+    }
+    .proj-card:hover { border-color: #1565c0; }
+    .proj-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .proj-name { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+    .proj-desc { font-size: 12px; color: #777; line-height: 1.5; }
+    .proj-skills { display: flex; flex-wrap: wrap; gap: 5px; }
+    .proj-count { font-size: 12px; color: #1565c0; font-weight: 600; }
+    .proj-status { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+    .status-active    { background: #e8f5e9; color: #2e7d32; }
+    .status-on_hold   { background: #fff3e0; color: #e65100; }
+    .status-completed { background: #f3e5f5; color: #7b1fa2; }
+    .skill-tag.match  { background: #e3f2fd; color: #1565c0; border: 1.5px solid #90caf9; }
   `]
 })
 export class EmployeeDashboardComponent implements OnInit {
   currentUser = this.authService.getCurrentUser();
   profile: any = null;
+  suggestedProjects: any[] = [];
 
   constructor(
     private authService: AuthService,
@@ -329,7 +374,18 @@ export class EmployeeDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.employeeService.getProfile().subscribe({ next: (p) => this.profile = p, error: () => {} });
+    this.employeeService.getProfile().subscribe({
+      next: (p) => {
+        this.profile = p;
+        if (p?.skills?.length > 0) {
+          this.employeeService.getSuggestedProjects().subscribe({
+            next: (projects) => this.suggestedProjects = projects,
+            error: () => {}
+          });
+        }
+      },
+      error: () => {}
+    });
   }
 
   getInitial(): string { return (this.currentUser?.username?.[0] ?? 'U').toUpperCase(); }
@@ -373,4 +429,10 @@ export class EmployeeDashboardComponent implements OnInit {
   createProfile():      void { this.router.navigate(['/employee/profile']); }
   uploadCertification():void { this.router.navigate(['/employee/certification']); }
   takeTest():           void { this.router.navigate(['/employee/test']); }
+
+  isSkillMatch(skill: string): boolean {
+    return this.profile?.skills?.some(
+      (s: string) => s.toLowerCase() === skill.toLowerCase()
+    ) ?? false;
+  }
 }
