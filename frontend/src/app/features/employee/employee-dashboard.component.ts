@@ -204,9 +204,9 @@ import { IconComponent } from '../../shared/icon.component';
               <ng-container [ngSwitch]="applicationStatus[p.id]">
                 <button *ngSwitchDefault
                   class="apply-btn"
-                  [disabled]="profile?.status !== 'APPROVED' || applying === p.id"
+                  [disabled]="profile?.status !== 'APPROVED' || applying === p.id || hasPendingTests()"
                   (click)="applyToProject(p)"
-                  [title]="profile?.status !== 'APPROVED' ? 'Your profile must be approved by HR first' : ''">
+                  [title]="profile?.status !== 'APPROVED' ? 'Your profile must be approved by HR first' : hasPendingTests() ? 'Complete all pending skill tests before applying' : ''">
                   <app-icon name="send" [size]="13" color="#fff"></app-icon>
                   {{ applying === p.id ? 'Applying...' : 'Apply' }}
                 </button>
@@ -457,6 +457,10 @@ export class EmployeeDashboardComponent implements OnInit {
       this.toast.warning('Your profile must be approved by HR before you can apply.');
       return;
     }
+    if (this.hasPendingTests()) {
+      this.toast.warning('You have pending skill tests. Please complete all mandatory tests before applying.');
+      return;
+    }
     this.applying = project.id;
     this.employeeService.applyToProject(project.id).subscribe({
       next: () => {
@@ -470,6 +474,10 @@ export class EmployeeDashboardComponent implements OnInit {
         this.toast.error(msg);
       }
     });
+  }
+
+  hasPendingTests(): boolean {
+    return this.profile?.mcqTests?.some((t: any) => t.status === 'PENDING') ?? false;
   }
 
   getInitial(): string { return (this.currentUser?.username?.[0] ?? 'U').toUpperCase(); }

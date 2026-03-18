@@ -148,6 +148,12 @@ public class ProjectService {
             throw new RuntimeException("Only employees with APPROVED profile can apply.");
         }
 
+        boolean hasPendingTests = employee.getMcqTests().stream()
+                .anyMatch(t -> t.getStatus() == TestStatus.PENDING);
+        if (hasPendingTests) {
+            throw new RuntimeException("You have pending skill tests. Please complete all mandatory tests before applying to a project.");
+        }
+
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
 
