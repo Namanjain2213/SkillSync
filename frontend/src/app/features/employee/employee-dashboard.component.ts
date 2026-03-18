@@ -27,6 +27,15 @@ import { IconComponent } from '../../shared/icon.component';
         </div>
       </div>
 
+      <!-- Rejection Reason Banner -->
+      <div class="rejection-banner" *ngIf="profile?.status === 'REJECTED' && profile?.rejectionReason">
+        <app-icon name="alert-circle" [size]="16" color="#c62828"></app-icon>
+        <div>
+          <div class="rejection-title">Profile Rejected</div>
+          <div class="rejection-msg">{{ profile.rejectionReason }}</div>
+        </div>
+      </div>
+
       <!-- Stat Cards -->
       <div class="stats-row">
         <div class="stat-card" *ngFor="let s of getStats()">
@@ -340,6 +349,14 @@ import { IconComponent } from '../../shared/icon.component';
     .bar-red   { background: linear-gradient(90deg, #e53935, #ef5350); }
     .score-num { font-size: 13px; font-weight: 700; color: #333; min-width: 34px; text-align: right; }
     .test-pending { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #bbb; font-style: italic; }
+
+    /* REJECTION BANNER */
+    .rejection-banner {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: #ffebee; border: 1.5px solid #ef9a9a; border-radius: 12px; padding: 14px 18px;
+    }
+    .rejection-title { font-size: 13px; font-weight: 700; color: #c62828; margin-bottom: 4px; }
+    .rejection-msg { font-size: 13px; color: #b71c1c; line-height: 1.5; }
 
     /* SUGGESTED PROJECTS */
     .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; padding: 16px 18px; }

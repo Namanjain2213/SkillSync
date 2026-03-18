@@ -15,6 +15,11 @@ import { PmDashboardComponent } from './features/pm/pm-dashboard.component';
 import { PmCreateProjectComponent } from './features/pm/pm-create-project.component';
 import { PmProjectsComponent } from './features/pm/pm-projects.component';
 import { PmCandidatesComponent } from './features/pm/pm-candidates.component';
+import { HrShellComponent } from './features/hr/hr-shell.component';
+import { HrDashboardComponent } from './features/hr/hr-dashboard.component';
+import { HrEmployeesComponent } from './features/hr/hr-employees.component';
+import { HrEmployeeDetailComponent } from './features/hr/hr-employee-detail.component';
+import { HrPendingComponent } from './features/hr/hr-pending.component';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -46,6 +51,16 @@ export const routes: Routes = [
       { path: 'projects',                      component: PmProjectsComponent },
       { path: 'create',                        component: PmCreateProjectComponent },
       { path: 'projects/:id/candidates',       component: PmCandidatesComponent },
+    ]
+  },
+  {
+    path: 'hr',
+    component: HrShellComponent,
+    children: [
+      { path: '',                  component: HrDashboardComponent },
+      { path: 'employees',         component: HrEmployeesComponent },
+      { path: 'employees/:id',     component: HrEmployeeDetailComponent },
+      { path: 'pending',           component: HrPendingComponent },
     ]
   },
   { path: '**', redirectTo: '/' }

@@ -17,6 +17,7 @@ public class EmployeeProfileResponse {
     private String highestQualification;
     private List<String> skills;
     private ProfileStatus status;
+    private String rejectionReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<CertificationDto> certifications;
@@ -33,6 +34,7 @@ public class EmployeeProfileResponse {
         r.highestQualification = e.getHighestQualification();
         r.skills = e.getSkills();
         r.status = e.getStatus();
+        r.rejectionReason = e.getRejectionReason();
         r.createdAt = e.getCreatedAt();
         r.updatedAt = e.getUpdatedAt();
         r.certifications = e.getCertifications().stream().map(c -> {
@@ -68,6 +70,7 @@ public class EmployeeProfileResponse {
     public String getHighestQualification() { return highestQualification; }
     public List<String> getSkills() { return skills; }
     public ProfileStatus getStatus() { return status; }
+    public String getRejectionReason() { return rejectionReason; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public List<CertificationDto> getCertifications() { return certifications; }

@@ -44,6 +44,9 @@ public class Employee {
     
     @Enumerated(EnumType.STRING)
     private ProfileStatus status = ProfileStatus.PENDING;
+
+    @Column(columnDefinition = "TEXT")
+    private String rejectionReason;
     
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
@@ -81,6 +84,9 @@ public class Employee {
     
     public ProfileStatus getStatus() { return status; }
     public void setStatus(ProfileStatus status) { this.status = status; }
+
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

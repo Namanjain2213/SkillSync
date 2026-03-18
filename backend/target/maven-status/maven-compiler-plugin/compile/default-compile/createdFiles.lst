@@ -26,6 +26,7 @@ com\rmg\employee\model\Role.class
 com\rmg\employee\service\AdminService$1.class
 com\rmg\employee\dto\McqQuestionDto.class
 com\rmg\employee\security\JwtTokenProvider.class
+com\rmg\employee\service\HrService.class
 com\rmg\employee\security\SecurityConfig.class
 com\rmg\employee\dto\EmployeeProfileRequest.class
 com\rmg\employee\security\JwtAuthenticationFilter.class
@@ -33,6 +34,7 @@ com\rmg\employee\controller\AuthController.class
 com\rmg\employee\model\User.class
 com\rmg\employee\service\AdminService.class
 com\rmg\employee\service\ProjectService.class
+com\rmg\employee\controller\HrController.class
 com\rmg\employee\config\DataInitializer.class
 com\rmg\employee\repository\EmployeeRepository.class
 com\rmg\employee\dto\LoginRequest.class

@@ -4,7 +4,9 @@ F:\RMGManagement\backend\src\main\java\com\rmg\employee\config\DataInitializer.j
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\ProfileStatus.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\controller\AuthController.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\LoginResponse.java
+F:\RMGManagement\backend\src\main\java\com\rmg\employee\controller\HrController.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\AdminStatsDto.java
+F:\RMGManagement\backend\src\main\java\com\rmg\employee\service\HrService.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\McqTestDto.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\DifficultyLevel.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\service\AdminService.java
