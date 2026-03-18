@@ -116,6 +116,18 @@ import { IconComponent } from '../../shared/icon.component';
             </li>
           </ul>
         </div>
+        <div class="role-card pm">
+          <div class="role-icon-wrap pm-bg">
+            <app-icon name="briefcase" [size]="28" color="#b45309"></app-icon>
+          </div>
+          <h3>Project Manager</h3>
+          <ul>
+            <li *ngFor="let item of pmItems">
+              <app-icon name="check-circle" [size]="14" color="#b45309"></app-icon>
+              {{item}}
+            </li>
+          </ul>
+        </div>
       </div>
     </section>
 
@@ -296,6 +308,7 @@ import { IconComponent } from '../../shared/icon.component';
     .role-card.employee { background: linear-gradient(135deg, #e8f5e9, #f1f8e9); border: 1px solid #c8e6c9; }
     .role-card.hr       { background: linear-gradient(135deg, #e3f2fd, #e8eaf6); border: 1px solid #bbdefb; }
     .role-card.admin    { background: linear-gradient(135deg, #fce4ec, #f3e5f5); border: 1px solid #f8bbd0; }
+    .role-card.pm       { background: linear-gradient(135deg, #fff8e1, #fef3c7); border: 1px solid #fde68a; }
     .role-icon-wrap {
       width: 60px; height: 60px; border-radius: 16px;
       display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
@@ -303,6 +316,7 @@ import { IconComponent } from '../../shared/icon.component';
     .emp-bg   { background: rgba(46,125,50,0.12); }
     .hr-bg    { background: rgba(21,101,192,0.12); }
     .admin-bg { background: rgba(106,27,154,0.12); }
+    .pm-bg    { background: rgba(180,83,9,0.12); }
     .role-card h3 { font-size: 20px; font-weight: 800; margin-bottom: 16px; color: #1a237e; }
     .role-card ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     .role-card ul li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #444; }
@@ -376,6 +390,7 @@ export class LandingComponent {
   employeeItems = ['Create & update profile', 'Take skill MCQ tests', 'Upload certifications', 'Track test results'];
   hrItems       = ['Review employee profiles', 'Approve or reject profiles', 'View test scores', 'Manage certifications'];
   adminItems    = ['Full system access', 'Manage all users', 'Configure MCQ tests', 'System oversight'];
+  pmItems       = ['Create & manage projects', 'Review project applications', 'Approve or reject candidates', 'Track project status'];
 
   constructor(private router: Router) {}
 
