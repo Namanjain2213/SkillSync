@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/employee")
@@ -58,9 +59,9 @@ public class EmployeeController {
         try {
             String username = authentication != null ? authentication.getName() : "employee";
             String fileName = employeeService.uploadCertification(username, certificationName, file);
-            return ResponseEntity.ok("Certification uploaded: " + fileName);
+            return ResponseEntity.ok(Map.of("fileName", fileName, "message", "Certification uploaded successfully"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error uploading certification: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "Error uploading certification: " + e.getMessage()));
         }
     }
 

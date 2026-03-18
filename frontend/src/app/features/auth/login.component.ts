@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { IconComponent } from '../../shared/icon.component';
+import { ToastService } from '../../shared/toast.service';
 
 @Component({
   selector: 'app-login',
@@ -40,13 +41,13 @@ import { IconComponent } from '../../shared/icon.component';
 
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <div class="field">
-              <label>Username</label>
+              <label>Employee ID</label>
               <div class="input-wrap" [class.error]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
                 <app-icon name="user" [size]="16" color="#999"></app-icon>
-                <input formControlName="username" placeholder="Enter username" autocomplete="username">
+                <input formControlName="username" placeholder="e.g. EMP001, HR001, ADM001, PM001" autocomplete="username">
               </div>
               <span class="err-msg" *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
-                Username is required
+                Employee ID is required
               </span>
             </div>
 
@@ -54,7 +55,7 @@ import { IconComponent } from '../../shared/icon.component';
               <label>Password</label>
               <div class="input-wrap" [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
                 <app-icon name="shield" [size]="16" color="#999"></app-icon>
-                <input [type]="showPass ? 'text' : 'password'" formControlName="password" placeholder="Enter password" autocomplete="current-password">
+                <input [type]="showPass ? 'text' : 'password'" formControlName="password" placeholder="Min 8 chars: A-Z, a-z, 0-9, special (@#$...)" autocomplete="current-password">
                 <button type="button" class="eye-btn" (click)="showPass = !showPass">
                   <app-icon [name]="showPass ? 'x-circle' : 'info'" [size]="15" color="#aaa"></app-icon>
                 </button>
@@ -62,11 +63,6 @@ import { IconComponent } from '../../shared/icon.component';
               <span class="err-msg" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
                 Password is required
               </span>
-            </div>
-
-            <div class="error-banner" *ngIf="errorMsg">
-              <app-icon name="x-circle" [size]="15" color="#c62828"></app-icon>
-              {{errorMsg}}
             </div>
 
             <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || loading">
@@ -81,19 +77,6 @@ import { IconComponent } from '../../shared/icon.component';
             </button>
           </form>
 
-          <div class="demo-box">
-            <div class="demo-title">
-              <app-icon name="info" [size]="14" color="#1565c0"></app-icon>
-              Demo Credentials
-            </div>
-            <div class="demo-row" *ngFor="let d of demos" (click)="fillDemo(d)">
-              <div class="demo-role">
-                <app-icon [name]="d.icon" [size]="13" [color]="d.color"></app-icon>
-                {{d.role}}
-              </div>
-              <div class="demo-creds">{{d.username}} / {{d.password}}</div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -224,7 +207,6 @@ export class LoginComponent {
 
   loading = false;
   showPass = false;
-  errorMsg = '';
 
   feats = [
     { icon: 'user',        text: 'Employee profile management' },
@@ -233,31 +215,21 @@ export class LoginComponent {
     { icon: 'shield',      text: 'Role-based secure access' },
   ];
 
-  demos = [
-    { role: 'Employee', icon: 'user',      color: '#2e7d32', username: 'EMP001', password: 'Emp@1234'  },
-    { role: 'HR',       icon: 'users',     color: '#1565c0', username: 'HR001',  password: 'Hr@12345'  },
-    { role: 'Admin',    icon: 'shield',    color: '#6a1b9a', username: 'ADM001', password: 'Admin@1234'},
-    { role: 'PM',       icon: 'layers',    color: '#e65100', username: 'PM001',  password: 'Pm@12345'  },
-  ];
-
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private toast: ToastService,
     private router: Router
   ) {}
-
-  fillDemo(d: any): void {
-    this.loginForm.patchValue({ username: d.username, password: d.password });
-  }
 
   onSubmit(): void {
     if (this.loginForm.valid) {
       this.loading = true;
-      this.errorMsg = '';
       const { username, password } = this.loginForm.value;
       this.authService.login({ username: username!, password: password! }).subscribe({
         next: (response) => {
           this.loading = false;
+          this.toast.success(`Welcome back, ${response.fullName || response.username}!`);
           if (response.role === 'EMPLOYEE') this.router.navigate(['/employee']);
           else if (response.role === 'HR')   this.router.navigate(['/hr']);
           else if (response.role === 'ADMIN') this.router.navigate(['/admin']);
@@ -265,7 +237,7 @@ export class LoginComponent {
         },
         error: () => {
           this.loading = false;
-          this.errorMsg = 'Invalid username or password. Please try again.';
+          this.toast.error('Invalid Employee ID or password. Please try again.');
         }
       });
     }

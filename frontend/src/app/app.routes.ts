@@ -5,6 +5,7 @@ import { ShellComponent } from './features/employee/shell.component';
 import { EmployeeDashboardComponent } from './features/employee/employee-dashboard.component';
 import { ProfileFormComponent } from './features/employee/profile-form.component';
 import { McqTestComponent } from './features/employee/mcq-test.component';
+import { CertificationComponent } from './features/employee/certification.component';
 import { AdminShellComponent } from './features/admin/admin-shell.component';
 import { AdminDashboardComponent } from './features/admin/admin-dashboard.component';
 import { AdminUsersComponent } from './features/admin/admin-users.component';
@@ -25,6 +26,7 @@ export const routes: Routes = [
       { path: '', component: EmployeeDashboardComponent },
       { path: 'profile', component: ProfileFormComponent },
       { path: 'test', component: McqTestComponent },
+      { path: 'certification', component: CertificationComponent },
     ]
   },
   {

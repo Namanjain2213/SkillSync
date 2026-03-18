@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AdminService } from '../../core/services/admin.service';
 import { IconComponent } from '../../shared/icon.component';
+import { ToastService } from '../../shared/toast.service';
 
 @Component({
   selector: 'app-admin-create-user',
@@ -78,15 +79,7 @@ import { IconComponent } from '../../shared/icon.component';
             </span>
           </div>
 
-          <!-- Error / Success -->
-          <div class="error-banner" *ngIf="errorMsg">
-            <app-icon name="x-circle" [size]="15" color="#c62828"></app-icon>
-            {{ errorMsg }}
-          </div>
-          <div class="success-banner" *ngIf="successMsg">
-            <app-icon name="check-circle" [size]="15" color="#2e7d32"></app-icon>
-            {{ successMsg }}
-          </div>
+          <!-- Error / Success banners removed — using toast notifications -->
 
           <div class="form-actions">
             <button type="button" class="btn-cancel" (click)="router.navigate(['/admin/users'])">Cancel</button>
@@ -243,8 +236,6 @@ export class AdminCreateUserComponent {
 
   loading = false;
   showPass = false;
-  errorMsg = '';
-  successMsg = '';
 
   roles = [
     { value: 'EMPLOYEE',        label: 'Employee',        icon: 'user',       color: '#2e7d32', bg: '#e8f5e9', desc: 'Can create profile, take MCQ tests, upload certifications.' },
@@ -256,6 +247,7 @@ export class AdminCreateUserComponent {
   constructor(
     private fb: FormBuilder,
     private adminService: AdminService,
+    private toast: ToastService,
     public router: Router
   ) {}
 
@@ -267,19 +259,16 @@ export class AdminCreateUserComponent {
   onSubmit(): void {
     if (this.form.invalid) return;
     this.loading = true;
-    this.errorMsg = '';
-    this.successMsg = '';
-
     this.adminService.createUser(this.form.value).subscribe({
       next: (user) => {
         this.loading = false;
-        this.successMsg = `User created! Employee ID: ${user.employeeId} — share this with the user for login.`;
+        this.toast.success(`User created! Employee ID: ${user.employeeId}`);
         this.form.reset({ role: 'EMPLOYEE' });
-        setTimeout(() => this.router.navigate(['/admin/users']), 2500);
+        setTimeout(() => this.router.navigate(['/admin/users']), 1500);
       },
       error: (err) => {
         this.loading = false;
-        this.errorMsg = err.error?.error ?? 'Failed to create user. Please try again.';
+        this.toast.error(err.error?.error ?? 'Failed to create user. Please try again.');
       }
     });
   }

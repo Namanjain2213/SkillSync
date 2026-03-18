@@ -20,6 +20,7 @@ com\rmg\employee\dto\CreateUserRequest.class
 com\rmg\employee\dto\McqTestResponse.class
 com\rmg\employee\repository\UserRepository.class
 com\rmg\employee\service\UserDetailsServiceImpl.class
+com\rmg\employee\controller\FileController.class
 com\rmg\employee\model\Employee.class
 com\rmg\employee\model\Role.class
 com\rmg\employee\service\AdminService$1.class

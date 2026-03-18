@@ -60,13 +60,13 @@ import { IconComponent } from '../../shared/icon.component';
               <app-icon name="chevron-right" [size]="16" color="#bbb"></app-icon>
             </button>
 
-            <button class="action-item" (click)="takeTest()" [disabled]="!profile">
+            <button class="action-item" (click)="takeTest()" [disabled]="!profile || !profile.skills?.length">
               <span class="action-icon" style="background:#e8f5e9">
                 <app-icon name="file-text" [size]="18" color="#2e7d32"></app-icon>
               </span>
               <div class="action-text">
                 <div class="action-name">Take MCQ Test</div>
-                <div class="action-sub">Skill assessment tests</div>
+                <div class="action-sub">{{ !profile ? 'Create profile first' : !profile.skills?.length ? 'Add skills to unlock' : 'Skill assessment tests' }}</div>
               </div>
               <app-icon name="chevron-right" [size]="16" color="#bbb"></app-icon>
             </button>

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProjectService } from '../../core/services/project.service';
 import { IconComponent } from '../../shared/icon.component';
+import { ToastService } from '../../shared/toast.service';
 
 const SKILL_OPTIONS = ['Java', 'Python', 'JavaScript', 'TypeScript', 'Angular', 'React',
   'Spring Boot', '.NET', 'AI/ML', 'DevOps', 'AWS', 'Docker', 'Kubernetes',
@@ -20,12 +21,6 @@ const SKILL_OPTIONS = ['Java', 'Python', 'JavaScript', 'TypeScript', 'Angular', 
           <app-icon name="plus-circle" [size]="22" color="#1565c0"></app-icon>
           <h2>Create New Project</h2>
         </div>
-
-        <div class="success-msg" *ngIf="success">
-          <app-icon name="check-circle" [size]="18" color="#2e7d32"></app-icon>
-          Project created! Redirecting...
-        </div>
-        <div class="error-msg" *ngIf="error">{{ error }}</div>
 
         <form (ngSubmit)="onSubmit()" #f="ngForm">
           <div class="field">
@@ -125,10 +120,8 @@ export class PmCreateProjectComponent {
   skillOptions = SKILL_OPTIONS;
   form = { name: '', description: '', requiredSkills: [] as string[] };
   loading = false;
-  success = false;
-  error = '';
 
-  constructor(public router: Router, private projectService: ProjectService) {}
+  constructor(public router: Router, private projectService: ProjectService, private toast: ToastService) {}
 
   isSelected(skill: string): boolean {
     return this.form.requiredSkills.includes(skill);
@@ -143,16 +136,15 @@ export class PmCreateProjectComponent {
   onSubmit(): void {
     if (!this.form.name || this.form.requiredSkills.length === 0) return;
     this.loading = true;
-    this.error = '';
     this.projectService.createProject(this.form).subscribe({
       next: (p) => {
-        this.success = true;
         this.loading = false;
-        setTimeout(() => this.router.navigate(['/pm/projects', p.id, 'candidates']), 1200);
+        this.toast.success('Project created successfully!');
+        setTimeout(() => this.router.navigate(['/pm/projects', p.id, 'candidates']), 800);
       },
       error: (e) => {
-        this.error = e?.error?.message || 'Failed to create project.';
         this.loading = false;
+        this.toast.error(e?.error?.message || 'Failed to create project.');
       }
     });
   }

@@ -13,6 +13,7 @@ F:\RMGManagement\backend\src\main\java\com\rmg\employee\controller\ProjectContro
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\ProjectStatus.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\ProjectRequest.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\service\EmployeeService.java
+F:\RMGManagement\backend\src\main\java\com\rmg\employee\controller\FileController.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\service\AuthService.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\EmployeeProfileResponse.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\Certification.java

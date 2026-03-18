@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminService } from '../../core/services/admin.service';
 import { IconComponent } from '../../shared/icon.component';
+import { ToastService } from '../../shared/toast.service';
 
 @Component({
   selector: 'app-admin-users',
@@ -248,7 +249,8 @@ export class AdminUsersComponent implements OnInit {
   constructor(
     public router: Router,
     private route: ActivatedRoute,
-    private adminService: AdminService
+    private adminService: AdminService,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -283,7 +285,9 @@ export class AdminUsersComponent implements OnInit {
       next: (updated) => {
         const idx = this.allUsers.findIndex(u => u.id === user.id);
         if (idx !== -1) this.allUsers[idx] = updated;
-      }
+        this.toast.success(`${updated.fullName || updated.employeeId} ${updated.active ? 'activated' : 'deactivated'}.`);
+      },
+      error: () => this.toast.error('Failed to update user status.')
     });
   }
 
@@ -293,9 +297,11 @@ export class AdminUsersComponent implements OnInit {
     if (!this.deleteTarget) return;
     this.adminService.deleteUser(this.deleteTarget.id).subscribe({
       next: () => {
+        this.toast.success(`User ${this.deleteTarget.fullName || this.deleteTarget.employeeId} deleted.`);
         this.allUsers = this.allUsers.filter(u => u.id !== this.deleteTarget.id);
         this.deleteTarget = null;
-      }
+      },
+      error: () => this.toast.error('Failed to delete user.')
     });
   }
 
