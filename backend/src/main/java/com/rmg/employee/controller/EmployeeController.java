@@ -4,6 +4,7 @@ import com.rmg.employee.dto.EmployeeProfileRequest;
 import com.rmg.employee.dto.EmployeeProfileResponse;
 import com.rmg.employee.dto.McqTestDto;
 import com.rmg.employee.dto.McqTestResponse;
+import com.rmg.employee.dto.ProjectApplicationDto;
 import com.rmg.employee.dto.ProjectResponse;
 import com.rmg.employee.dto.TestSubmissionRequest;
 import com.rmg.employee.service.EmployeeService;
@@ -94,6 +95,36 @@ public class EmployeeController {
             return ResponseEntity.ok(projectService.getSuggestedProjectsForEmployee(username));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/projects/{projectId}/apply")
+    public ResponseEntity<?> applyToProject(@PathVariable Long projectId, Authentication authentication) {
+        try {
+            String username = authentication != null ? authentication.getName() : "employee";
+            return ResponseEntity.ok(projectService.applyToProject(username, projectId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/my-applications")
+    public ResponseEntity<List<ProjectApplicationDto>> getMyApplications(Authentication authentication) {
+        try {
+            String username = authentication != null ? authentication.getName() : "employee";
+            return ResponseEntity.ok(projectService.getMyApplications(username));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/application-status")
+    public ResponseEntity<Map<Long, String>> getApplicationStatusMap(Authentication authentication) {
+        try {
+            String username = authentication != null ? authentication.getName() : "employee";
+            return ResponseEntity.ok(projectService.getApplicationStatusMap(username));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of());
         }
     }
 }

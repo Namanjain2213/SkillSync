@@ -27,4 +27,16 @@ export class ProjectService {
   getCandidates(projectId: number): Observable<any[]> {
     return this.http.get<any[]>(`${BASE}/projects/${projectId}/candidates`);
   }
+
+  getApplications(projectId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${BASE}/projects/${projectId}/applications`);
+  }
+
+  approveApplication(applicationId: number, note: string = ''): Observable<any> {
+    return this.http.post(`${BASE}/applications/${applicationId}/approve`, { note });
+  }
+
+  rejectApplication(applicationId: number, note: string = ''): Observable<any> {
+    return this.http.post(`${BASE}/applications/${applicationId}/reject`, { note });
+  }
 }

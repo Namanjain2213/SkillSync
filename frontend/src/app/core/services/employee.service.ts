@@ -65,4 +65,16 @@ export class EmployeeService {
   getSuggestedProjects(): Observable<any[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/employee/suggested-projects`);
   }
+
+  applyToProject(projectId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/employee/projects/${projectId}/apply`, {});
+  }
+
+  getMyApplications(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/employee/my-applications`);
+  }
+
+  getApplicationStatusMap(): Observable<{ [projectId: number]: string }> {
+    return this.http.get<{ [projectId: number]: string }>(`${environment.apiUrl}/employee/application-status`);
+  }
 }

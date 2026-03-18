@@ -1,14 +1,12 @@
 package com.rmg.employee.service;
 
 import com.rmg.employee.dto.EmployeeProfileResponse;
+import com.rmg.employee.dto.ProjectApplicationDto;
 import com.rmg.employee.dto.ProjectRequest;
 import com.rmg.employee.dto.ProjectResponse;
-import com.rmg.employee.model.Employee;
-import com.rmg.employee.model.ProfileStatus;
-import com.rmg.employee.model.Project;
-import com.rmg.employee.model.ProjectStatus;
-import com.rmg.employee.model.User;
+import com.rmg.employee.model.*;
 import com.rmg.employee.repository.EmployeeRepository;
+import com.rmg.employee.repository.ProjectApplicationRepository;
 import com.rmg.employee.repository.ProjectRepository;
 import com.rmg.employee.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +25,7 @@ public class ProjectService {
     @Autowired private ProjectRepository projectRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private EmployeeRepository employeeRepository;
+    @Autowired private ProjectApplicationRepository applicationRepository;
 
     @Transactional
     public ProjectResponse createProject(String pmEmployeeId, ProjectRequest request) {
@@ -133,5 +133,103 @@ public class ProjectService {
         return (int) p.getRequiredSkills().stream()
                 .filter(s -> empSkills.contains(s.toUpperCase(Locale.ROOT)))
                 .count();
+    }
+
+    // ── Employee applies to a project ──────────────────────────────────────────
+    @Transactional
+    public ProjectApplicationDto applyToProject(String employeeId, Long projectId) {
+        User user = userRepository.findByEmployeeId(employeeId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Employee employee = employeeRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Employee profile not found"));
+
+        if (employee.getStatus() != ProfileStatus.APPROVED) {
+            throw new RuntimeException("Only employees with APPROVED profile can apply.");
+        }
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        if (applicationRepository.existsByProjectIdAndEmployeeId(projectId, employee.getId())) {
+            throw new RuntimeException("You have already applied to this project.");
+        }
+
+        ProjectApplication app = new ProjectApplication();
+        app.setProject(project);
+        app.setEmployee(employee);
+        return ProjectApplicationDto.from(applicationRepository.save(app));
+    }
+
+    // ── Get all applications for a project (PM view) ───────────────────────────
+    @Transactional(readOnly = true)
+    public List<ProjectApplicationDto> getApplicationsForProject(Long projectId) {
+        return applicationRepository.findByProjectIdWithDetails(projectId).stream()
+                .map(ProjectApplicationDto::from)
+                .collect(Collectors.toList());
+    }
+
+    // ── PM approves an application ─────────────────────────────────────────────
+    @Transactional
+    public ProjectApplicationDto approveApplication(Long applicationId, String note) {
+        ProjectApplication app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+        app.setStatus(ApplicationStatus.APPROVED);
+        app.setPmNote(note);
+        app.setUpdatedAt(LocalDateTime.now());
+        applicationRepository.save(app);
+        // re-fetch with full details to avoid lazy loading issues
+        return applicationRepository.findByProjectIdWithDetails(app.getProject().getId())
+                .stream().filter(a -> a.getId().equals(applicationId))
+                .map(ProjectApplicationDto::from).findFirst()
+                .orElseThrow();
+    }
+
+    @Transactional
+    public ProjectApplicationDto rejectApplication(Long applicationId, String note) {
+        ProjectApplication app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+        app.setStatus(ApplicationStatus.REJECTED);
+        app.setPmNote(note);
+        app.setUpdatedAt(LocalDateTime.now());
+        applicationRepository.save(app);
+        return applicationRepository.findByProjectIdWithDetails(app.getProject().getId())
+                .stream().filter(a -> a.getId().equals(applicationId))
+                .map(ProjectApplicationDto::from).findFirst()
+                .orElseThrow();
+    }
+
+    // ── Get employee's own applications ────────────────────────────────────────
+    @Transactional(readOnly = true)
+    public List<ProjectApplicationDto> getMyApplications(String employeeId) {
+        User user = userRepository.findByEmployeeId(employeeId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Employee employee = employeeRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Employee profile not found"));
+        return applicationRepository.findByEmployeeId(employee.getId()).stream()
+                .map(a -> {
+                    ProjectApplicationDto dto = new ProjectApplicationDto();
+                    dto.setId(a.getId());
+                    dto.setProjectId(a.getProject().getId());
+                    dto.setProjectName(a.getProject().getName());
+                    dto.setStatus(a.getStatus().name());
+                    dto.setPmNote(a.getPmNote());
+                    dto.setAppliedAt(a.getAppliedAt());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    // ── Check if employee already applied ──────────────────────────────────────
+    @Transactional(readOnly = true)
+    public Map<Long, String> getApplicationStatusMap(String employeeId) {
+        User user = userRepository.findByEmployeeId(employeeId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Employee employee = employeeRepository.findByUserId(user.getId()).orElse(null);
+        if (employee == null) return Map.of();
+        Map<Long, String> map = new java.util.HashMap<>();
+        applicationRepository.findByEmployeeId(employee.getId())
+                .forEach(a -> map.put(a.getProject().getId(), a.getStatus().name()));
+        return map;
     }
 }

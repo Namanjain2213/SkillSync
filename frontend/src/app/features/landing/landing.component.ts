@@ -51,7 +51,7 @@ import { IconComponent } from '../../shared/icon.component';
           <div class="stat-divider"></div>
           <div class="stat"><span class="stat-num">400+</span><span class="stat-label">MCQ Questions</span></div>
           <div class="stat-divider"></div>
-          <div class="stat"><span class="stat-num">3</span><span class="stat-label">User Roles</span></div>
+          <div class="stat"><span class="stat-num">4</span><span class="stat-label">User Roles</span></div>
         </div>
       </div>
     </section>

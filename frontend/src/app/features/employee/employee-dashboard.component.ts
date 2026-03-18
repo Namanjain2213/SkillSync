@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { EmployeeService } from '../../core/services/employee.service';
+import { ToastService } from '../../shared/toast.service';
 import { IconComponent } from '../../shared/icon.component';
 
 @Component({
@@ -199,6 +200,27 @@ import { IconComponent } from '../../shared/icon.component';
               <span class="skill-tag match" *ngFor="let s of p.requiredSkills"
                     [class.match]="isSkillMatch(s)">{{ s }}</span>
             </div>
+            <div class="proj-footer">
+              <ng-container [ngSwitch]="applicationStatus[p.id]">
+                <button *ngSwitchDefault
+                  class="apply-btn"
+                  [disabled]="profile?.status !== 'APPROVED' || applying === p.id"
+                  (click)="applyToProject(p)"
+                  [title]="profile?.status !== 'APPROVED' ? 'Your profile must be approved by HR first' : ''">
+                  <app-icon name="send" [size]="13" color="#fff"></app-icon>
+                  {{ applying === p.id ? 'Applying...' : 'Apply' }}
+                </button>
+                <span *ngSwitchCase="'PENDING'" class="app-status app-pending">
+                  <app-icon name="clock" [size]="12" color="#e65100"></app-icon> Applied · Pending
+                </span>
+                <span *ngSwitchCase="'APPROVED'" class="app-status app-approved">
+                  <app-icon name="check-circle" [size]="12" color="#2e7d32"></app-icon> Selected
+                </span>
+                <span *ngSwitchCase="'REJECTED'" class="app-status app-rejected">
+                  <app-icon name="x-circle" [size]="12" color="#c62828"></app-icon> Not Selected
+                </span>
+              </ng-container>
+            </div>
           </div>
         </div>
       </div>
@@ -377,16 +399,37 @@ import { IconComponent } from '../../shared/icon.component';
     .status-on_hold   { background: #fff3e0; color: #e65100; }
     .status-completed { background: #f3e5f5; color: #7b1fa2; }
     .skill-tag.match  { background: #e3f2fd; color: #1565c0; border: 1.5px solid #90caf9; }
+
+    .proj-footer { display: flex; align-items: center; margin-top: 4px; }
+    .apply-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 16px; border-radius: 8px;
+      background: linear-gradient(135deg, #1a237e, #1565c0);
+      border: none; color: white; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .apply-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(26,35,126,0.3); }
+    .apply-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .app-status {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px;
+    }
+    .app-pending  { background: #fff3e0; color: #e65100; }
+    .app-approved { background: #e8f5e9; color: #2e7d32; }
+    .app-rejected { background: #ffebee; color: #c62828; }
   `]
 })
 export class EmployeeDashboardComponent implements OnInit {
   currentUser = this.authService.getCurrentUser();
   profile: any = null;
   suggestedProjects: any[] = [];
+  applicationStatus: { [projectId: number]: string } = {};
+  applying: number | null = null;
 
   constructor(
     private authService: AuthService,
     private employeeService: EmployeeService,
+    private toast: ToastService,
     private router: Router
   ) {}
 
@@ -399,9 +442,33 @@ export class EmployeeDashboardComponent implements OnInit {
             next: (projects) => this.suggestedProjects = projects,
             error: () => {}
           });
+          this.employeeService.getApplicationStatusMap().subscribe({
+            next: (map) => this.applicationStatus = map,
+            error: () => {}
+          });
         }
       },
       error: () => {}
+    });
+  }
+
+  applyToProject(project: any): void {
+    if (this.profile?.status !== 'APPROVED') {
+      this.toast.warning('Your profile must be approved by HR before you can apply.');
+      return;
+    }
+    this.applying = project.id;
+    this.employeeService.applyToProject(project.id).subscribe({
+      next: () => {
+        this.applicationStatus[project.id] = 'PENDING';
+        this.applying = null;
+        this.toast.success(`Applied to "${project.name}" successfully!`);
+      },
+      error: (err) => {
+        this.applying = null;
+        const msg = err?.error?.error || 'Failed to apply.';
+        this.toast.error(msg);
+      }
     });
   }
 
