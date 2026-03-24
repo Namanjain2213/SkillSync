@@ -40,6 +40,16 @@ public class HrService {
     }
 
     @Transactional
+    public EmployeeProfileResponse onBenchProfile(Long id) {
+        Employee emp = employeeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        emp.setStatus(ProfileStatus.ON_BENCH);
+        emp.setRejectionReason(null);
+        emp.setUpdatedAt(LocalDateTime.now());
+        return EmployeeProfileResponse.from(employeeRepository.save(emp));
+    }
+
+    @Transactional
     public EmployeeProfileResponse approveProfile(Long id) {
         Employee emp = employeeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));

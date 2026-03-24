@@ -20,6 +20,10 @@ export class HrService {
     return this.http.get<any>(`${BASE}/employees/${id}`);
   }
 
+  onBenchProfile(id: number): Observable<any> {
+    return this.http.post<any>(`${BASE}/employees/${id}/on-bench`, {});
+  }
+
   approveProfile(id: number): Observable<any> {
     return this.http.post<any>(`${BASE}/employees/${id}/approve`, {});
   }

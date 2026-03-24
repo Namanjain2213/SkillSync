@@ -10,6 +10,7 @@ public class UserDto {
     private String role;
     private boolean active;
     private LocalDateTime createdAt;
+    private String employeeStatus; // only for EMPLOYEE role
 
     public UserDto(Long id, String employeeId, String fullName, String email,
                    String role, boolean active, LocalDateTime createdAt) {
@@ -29,4 +30,6 @@ public class UserDto {
     public String getRole() { return role; }
     public boolean isActive() { return active; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public String getEmployeeStatus() { return employeeStatus; }
+    public void setEmployeeStatus(String employeeStatus) { this.employeeStatus = employeeStatus; }
 }

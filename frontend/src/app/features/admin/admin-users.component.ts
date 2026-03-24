@@ -64,17 +64,26 @@ import { ToastService } from '../../shared/toast.service';
             <app-icon [name]="u.active ? 'check-circle' : 'x-circle'" [size]="12" color="currentColor"></app-icon>
             {{ u.active ? 'Active' : 'Inactive' }}
           </span>
+          <span class="status-badge status-bench" *ngIf="u.role === 'EMPLOYEE' && u.employeeStatus === 'ON_BENCH'" style="margin-left:4px">
+            On Bench
+          </span>
 
           <span class="date">{{ u.createdAt | date:'dd MMM yyyy' }}</span>
 
           <div class="actions">
-            <button class="action-btn toggle-btn"
-                    [class.deactivate]="u.active"
-                    [class.activate]="!u.active"
-                    (click)="toggleStatus(u)"
-                    [title]="u.active ? 'Deactivate' : 'Activate'">
-              <app-icon [name]="u.active ? 'x-circle' : 'check-circle'" [size]="14" color="currentColor"></app-icon>
-              {{ u.active ? 'Deactivate' : 'Activate' }}
+            <button class="action-btn bench-btn"
+                    *ngIf="u.role === 'EMPLOYEE' && u.employeeStatus !== 'ON_BENCH'"
+                    (click)="onBench(u)"
+                    title="On Bench">
+              <app-icon name="clock" [size]="14" color="currentColor"></app-icon>
+              On Bench
+            </button>
+            <button class="action-btn approve-btn"
+                    *ngIf="u.role === 'EMPLOYEE' && u.employeeStatus === 'ON_BENCH'"
+                    (click)="removeFromBench(u)"
+                    title="Approve">
+              <app-icon name="check-circle" [size]="14" color="currentColor"></app-icon>
+              Approve
             </button>
             <button class="action-btn delete-btn" (click)="confirmDelete(u)" title="Delete">
               <app-icon name="x-circle" [size]="14" color="currentColor"></app-icon>
@@ -95,7 +104,7 @@ import { ToastService } from '../../shared/toast.service';
             <app-icon name="x-circle" [size]="32" color="#c62828"></app-icon>
           </div>
           <h3>Delete User?</h3>
-          <p>Are you sure you want to delete <strong>{{ deleteTarget?.username }}</strong>? This cannot be undone.</p>
+          <p>Are you sure you want to delete <strong>{{ deleteTarget?.fullName || deleteTarget?.employeeId }}</strong>? This cannot be undone.</p>
           <div class="modal-actions">
             <button class="btn-cancel" (click)="deleteTarget = null">Cancel</button>
             <button class="btn-delete" (click)="deleteUser()">Delete</button>
@@ -189,6 +198,7 @@ import { ToastService } from '../../shared/toast.service';
     }
     .status-on  { background: #e8f5e9; color: #2e7d32; }
     .status-off { background: #ffebee; color: #c62828; }
+    .status-bench { background: #e3f2fd; color: #1565c0; }
 
     .date { font-size: 12px; color: #888; }
 
@@ -202,6 +212,10 @@ import { ToastService } from '../../shared/toast.service';
     .toggle-btn.deactivate:hover { background: #ffe0b2; }
     .toggle-btn.activate   { background: #e8f5e9; color: #2e7d32; }
     .toggle-btn.activate:hover { background: #c8e6c9; }
+    .bench-btn   { background: #e3f2fd; color: #1565c0; }
+    .bench-btn:hover { background: #bbdefb; }
+    .approve-btn { background: #e8f5e9; color: #2e7d32; }
+    .approve-btn:hover { background: #c8e6c9; }
     .delete-btn { background: #ffebee; color: #c62828; padding: 6px 8px; }
     .delete-btn:hover { background: #ffcdd2; }
 
@@ -272,7 +286,8 @@ export class AdminUsersComponent implements OnInit {
     return this.allUsers.filter(u => {
       const matchRole   = !this.activeFilter || u.role === this.activeFilter;
       const matchSearch = !this.searchTerm ||
-        u.username.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        (u.fullName || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        (u.employeeId || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         u.email.toLowerCase().includes(this.searchTerm.toLowerCase());
       return matchRole && matchSearch;
     });
@@ -288,6 +303,28 @@ export class AdminUsersComponent implements OnInit {
         this.toast.success(`${updated.fullName || updated.employeeId} ${updated.active ? 'activated' : 'deactivated'}.`);
       },
       error: () => this.toast.error('Failed to update user status.')
+    });
+  }
+
+  onBench(user: any): void {
+    this.adminService.onBenchEmployee(user.id).subscribe({
+      next: (updated) => {
+        const idx = this.allUsers.findIndex(u => u.id === user.id);
+        if (idx !== -1) this.allUsers[idx] = { ...this.allUsers[idx], employeeStatus: 'ON_BENCH' };
+        this.toast.success(`${user.fullName || user.employeeId} moved to On Bench.`);
+      },
+      error: () => this.toast.error('Failed to update status.')
+    });
+  }
+
+  removeFromBench(user: any): void {
+    this.adminService.approveEmployee(user.id).subscribe({
+      next: () => {
+        const idx = this.allUsers.findIndex(u => u.id === user.id);
+        if (idx !== -1) this.allUsers[idx] = { ...this.allUsers[idx], employeeStatus: 'APPROVED' };
+        this.toast.success(`${user.fullName || user.employeeId} moved back to Approved.`);
+      },
+      error: () => this.toast.error('Failed to update status.')
     });
   }
 

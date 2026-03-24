@@ -31,4 +31,12 @@ export class AdminService {
   deleteUser(id: number): Observable<any> {
     return this.http.delete(`${BASE}/users/${id}`);
   }
+
+  onBenchEmployee(id: number): Observable<any> {
+    return this.http.post(`${BASE}/employees/${id}/on-bench`, {});
+  }
+
+  approveEmployee(id: number): Observable<any> {
+    return this.http.post(`${BASE}/employees/${id}/approve`, {});
+  }
 }

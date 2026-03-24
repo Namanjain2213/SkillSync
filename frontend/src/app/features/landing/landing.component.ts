@@ -346,7 +346,7 @@ import { IconComponent } from '../../shared/icon.component';
     .diff-badge.hard     { background: rgba(106,27,154,0.2); color: #ce93d8; }
 
     /* CTA */
-    .cta { background: #f8f9ff; text-align: center; }
+    .cta { background: #f8f9ff; text-align: center; display: flex; flex-direction: column; align-items: center; }
     .cta-icon {
       width: 80px; height: 80px; border-radius: 50%;
       background: #e8eaf6; display: flex; align-items: center; justify-content: center;

@@ -3,13 +3,19 @@ package com.rmg.employee.service;
 import com.rmg.employee.dto.AdminStatsDto;
 import com.rmg.employee.dto.CreateUserRequest;
 import com.rmg.employee.dto.UserDto;
+import com.rmg.employee.model.Employee;
+import com.rmg.employee.model.ProfileStatus;
 import com.rmg.employee.model.Role;
 import com.rmg.employee.model.User;
+import com.rmg.employee.repository.EmployeeRepository;
+import com.rmg.employee.repository.ProjectApplicationRepository;
 import com.rmg.employee.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +24,12 @@ public class AdminService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private ProjectApplicationRepository projectApplicationRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -87,7 +99,34 @@ public class AdminService {
         return toDto(userRepository.save(user));
     }
 
+    @Transactional
+    public void onBenchEmployee(Long userId) {
+        Employee emp = employeeRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Employee not found for user: " + userId));
+        emp.setStatus(ProfileStatus.ON_BENCH);
+        emp.setRejectionReason(null);
+        emp.setUpdatedAt(LocalDateTime.now());
+        employeeRepository.save(emp);
+    }
+
+    @Transactional
+    public void approveEmployee(Long userId) {
+        Employee emp = employeeRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Employee not found for user: " + userId));
+        emp.setStatus(ProfileStatus.APPROVED);
+        emp.setRejectionReason(null);
+        emp.setUpdatedAt(LocalDateTime.now());
+        employeeRepository.save(emp);
+    }
+
+    @Transactional
     public void deleteUser(Long userId) {
+        employeeRepository.findByUserId(userId).ifPresent(emp -> {
+            // Delete project applications first (FK on employee_id)
+            projectApplicationRepository.deleteAll(projectApplicationRepository.findByEmployeeId(emp.getId()));
+            // Employee delete cascades certifications, mcqTests, skills
+            employeeRepository.delete(emp);
+        });
         userRepository.deleteById(userId);
     }
 
@@ -103,7 +142,13 @@ public class AdminService {
     }
 
     private UserDto toDto(User u) {
-        return new UserDto(u.getId(), u.getEmployeeId(), u.getFullName(),
+        UserDto dto = new UserDto(u.getId(), u.getEmployeeId(), u.getFullName(),
                 u.getEmail(), u.getRole().name(), u.isActive(), u.getCreatedAt());
+        if (u.getRole() == Role.EMPLOYEE) {
+            employeeRepository.findByUserId(u.getId()).ifPresent(emp ->
+                dto.setEmployeeStatus(emp.getStatus().name())
+            );
+        }
+        return dto;
     }
 }

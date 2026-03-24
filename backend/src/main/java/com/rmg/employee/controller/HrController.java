@@ -31,6 +31,11 @@ public class HrController {
         return ResponseEntity.ok(hrService.getEmployeeDetail(id));
     }
 
+    @PostMapping("/employees/{id}/on-bench")
+    public ResponseEntity<EmployeeProfileResponse> onBenchProfile(@PathVariable Long id) {
+        return ResponseEntity.ok(hrService.onBenchProfile(id));
+    }
+
     @PostMapping("/employees/{id}/approve")
     public ResponseEntity<EmployeeProfileResponse> approveProfile(@PathVariable Long id) {
         return ResponseEntity.ok(hrService.approveProfile(id));

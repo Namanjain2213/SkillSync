@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HrService } from '../../core/services/hr.service';
 import { IconComponent } from '../../shared/icon.component';
+import { ToastService } from '../../shared/toast.service';
 
 @Component({
   selector: 'app-hr-employees',
@@ -75,14 +76,24 @@ import { IconComponent } from '../../shared/icon.component';
               <td class="qual-cell">{{ emp.highestQualification }}</td>
               <td>
                 <span class="status-badge" [class]="'status-' + emp.status?.toLowerCase()">
-                  {{ emp.status }}
+                  {{ emp.status === 'ON_BENCH' ? 'On Bench' : emp.status }}
                 </span>
               </td>
               <td>
-                <button class="view-btn" (click)="viewDetail(emp.id)">
-                  <app-icon name="eye" [size]="14" color="#00695c"></app-icon>
-                  View
-                </button>
+                <div class="action-cell">
+                  <button class="view-btn" (click)="viewDetail(emp.id)">
+                    <app-icon name="eye" [size]="14" color="#00695c"></app-icon>
+                    View
+                  </button>
+                  <button class="bench-btn" *ngIf="emp.status === 'APPROVED'" (click)="onBench(emp)">
+                    <app-icon name="clock" [size]="14" color="#e65100"></app-icon>
+                    On Bench
+                  </button>
+                  <button class="approve-btn" *ngIf="emp.status === 'ON_BENCH'" (click)="removeFromBench(emp)">
+                    <app-icon name="check-circle" [size]="14" color="#2e7d32"></app-icon>
+                    Approve
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -164,7 +175,9 @@ import { IconComponent } from '../../shared/icon.component';
     .status-pending  { background: #fff3e0; color: #e65100; }
     .status-approved { background: #e8f5e9; color: #2e7d32; }
     .status-rejected { background: #ffebee; color: #c62828; }
+    .status-on_bench { background: #e3f2fd; color: #1565c0; }
 
+    .action-cell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .view-btn {
       display: flex; align-items: center; gap: 5px;
       padding: 6px 14px; border-radius: 8px;
@@ -172,6 +185,20 @@ import { IconComponent } from '../../shared/icon.component';
       font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.15s;
     }
     .view-btn:hover { background: #b2dfdb; }
+    .bench-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 8px;
+      background: #fff3e0; border: none; color: #e65100;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .bench-btn:hover { background: #ffe0b2; }
+    .approve-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 8px;
+      background: #e8f5e9; border: none; color: #2e7d32;
+      font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .approve-btn:hover { background: #c8e6c9; }
   `]
 })
 export class HrEmployeesComponent implements OnInit {
@@ -185,12 +212,14 @@ export class HrEmployeesComponent implements OnInit {
     { key: 'PENDING',  label: 'Pending' },
     { key: 'APPROVED', label: 'Approved' },
     { key: 'REJECTED', label: 'Rejected' },
+    { key: 'ON_BENCH', label: 'On Bench' },
   ];
 
   constructor(
     private hrService: HrService,
     public router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -204,6 +233,28 @@ export class HrEmployeesComponent implements OnInit {
   }
 
   setTab(key: string): void { this.activeTab = key; }
+
+  onBench(emp: any): void {
+    this.hrService.onBenchProfile(emp.id).subscribe({
+      next: (updated) => {
+        const idx = this.employees.findIndex(e => e.id === emp.id);
+        if (idx !== -1) this.employees[idx] = updated;
+        this.toast.success(`${emp.name} moved to On Bench.`);
+      },
+      error: () => this.toast.error('Failed to update status.')
+    });
+  }
+
+  removeFromBench(emp: any): void {
+    this.hrService.approveProfile(emp.id).subscribe({
+      next: (updated) => {
+        const idx = this.employees.findIndex(e => e.id === emp.id);
+        if (idx !== -1) this.employees[idx] = updated;
+        this.toast.success(`${emp.name} moved back to Approved.`);
+      },
+      error: () => this.toast.error('Failed to update status.')
+    });
+  }
 
   get filtered(): any[] {
     let list = this.employees;

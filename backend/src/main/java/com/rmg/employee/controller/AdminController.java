@@ -6,7 +6,6 @@ import com.rmg.employee.dto.UserDto;
 import com.rmg.employee.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,7 +14,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin")
 @CrossOrigin(origins = "*")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     @Autowired
@@ -54,6 +52,20 @@ public class AdminController {
     @PatchMapping("/users/{id}/toggle-status")
     public ResponseEntity<UserDto> toggleStatus(@PathVariable Long id) {
         return ResponseEntity.ok(adminService.toggleUserStatus(id));
+    }
+
+    // POST on-bench employee (accessible by Admin)
+    @PostMapping("/employees/{id}/on-bench")
+    public ResponseEntity<?> onBenchEmployee(@PathVariable Long id) {
+        adminService.onBenchEmployee(id);
+        return ResponseEntity.ok(Map.of("message", "Employee moved to On Bench"));
+    }
+
+    // POST approve employee from bench (accessible by Admin)
+    @PostMapping("/employees/{id}/approve")
+    public ResponseEntity<?> approveEmployee(@PathVariable Long id) {
+        adminService.approveEmployee(id);
+        return ResponseEntity.ok(Map.of("message", "Employee approved"));
     }
 
     // DELETE user

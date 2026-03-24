@@ -46,9 +46,10 @@ import { ToastService } from '../../shared/toast.service';
             <label>Full Name</label>
             <div class="input-wrap" [class.err]="isInvalid('fullName')">
               <app-icon name="user" [size]="15" color="#999"></app-icon>
-              <input formControlName="fullName" placeholder="Enter full name">
+              <input formControlName="fullName" placeholder="Enter full name"
+                     (keydown)="allowOnlyAlpha($event)">
             </div>
-            <span class="err-msg" *ngIf="isInvalid('fullName')">Full name is required</span>
+            <span class="err-msg" *ngIf="isInvalid('fullName')">{{ getNameError() }}</span>
           </div>
 
           <!-- Email -->
@@ -58,7 +59,7 @@ import { ToastService } from '../../shared/toast.service';
               <app-icon name="info" [size]="15" color="#999"></app-icon>
               <input formControlName="email" type="email" placeholder="Enter email address">
             </div>
-            <span class="err-msg" *ngIf="isInvalid('email')">Valid email is required</span>
+            <span class="err-msg" *ngIf="isInvalid('email')">{{ getEmailError() }}</span>
           </div>
 
           <!-- Password -->
@@ -226,11 +227,13 @@ import { ToastService } from '../../shared/toast.service';
 })
 export class AdminCreateUserComponent {
   passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=])[A-Za-z\d@$!%*?&#^()_+\-=]{8,}$/;
+  namePattern     = /^[a-zA-Z\s]{2,}$/;
+  emailPattern    = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
   form = this.fb.group({
     role:     ['EMPLOYEE', Validators.required],
-    fullName: ['', [Validators.required, Validators.minLength(2)]],
-    email:    ['', [Validators.required, Validators.email]],
+    fullName: ['', [Validators.required, Validators.minLength(2), Validators.pattern(this.namePattern)]],
+    email:    ['', [Validators.required, Validators.pattern(this.emailPattern)]],
     password: ['', [Validators.required, Validators.pattern(this.passwordPattern)]],
   });
 
@@ -251,9 +254,31 @@ export class AdminCreateUserComponent {
     public router: Router
   ) {}
 
+  allowOnlyAlpha(event: KeyboardEvent): void {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const controlKeys = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Home','End'];
+    if (controlKeys.includes(event.key)) return;
+    if (!/^[a-zA-Z\s]$/.test(event.key)) event.preventDefault();
+  }
+
   isInvalid(field: string): boolean {
     const c = this.form.get(field);
     return !!(c?.invalid && c?.touched);
+  }
+
+  getNameError(): string {
+    const c = this.form.get('fullName');
+    if (c?.hasError('required')) return 'Full name is required';
+    if (c?.hasError('minlength')) return 'Minimum 2 characters required';
+    if (c?.hasError('pattern')) return 'Only alphabets and spaces allowed';
+    return '';
+  }
+
+  getEmailError(): string {
+    const c = this.form.get('email');
+    if (c?.hasError('required')) return 'Email is required';
+    if (c?.hasError('pattern')) return 'Enter a valid email (e.g. user@example.com)';
+    return '';
   }
 
   onSubmit(): void {
