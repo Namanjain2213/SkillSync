@@ -20,6 +20,7 @@ public class McqTest {
     private Integer score;
     private Integer totalQuestions = 30;
     private Integer correctAnswers = 0;
+    private Integer attemptNumber = 1;
     
     @Enumerated(EnumType.STRING)
     private TestStatus status = TestStatus.PENDING;
@@ -46,6 +47,9 @@ public class McqTest {
     public Integer getCorrectAnswers() { return correctAnswers; }
     public void setCorrectAnswers(Integer correctAnswers) { this.correctAnswers = correctAnswers; }
     
+    public Integer getAttemptNumber() { return attemptNumber; }
+    public void setAttemptNumber(Integer attemptNumber) { this.attemptNumber = attemptNumber; }
+
     public TestStatus getStatus() { return status; }
     public void setStatus(TestStatus status) { this.status = status; }
     

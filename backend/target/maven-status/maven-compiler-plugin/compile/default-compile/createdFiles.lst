@@ -18,6 +18,7 @@ com\rmg\employee\security\JwtAuthenticationFilter.class
 com\rmg\employee\service\AdminService.class
 com\rmg\employee\config\DataInitializer.class
 com\rmg\employee\model\ProfileStatus.class
+com\rmg\employee\repository\McqTestRepository.class
 com\rmg\employee\controller\AdminController.class
 com\rmg\employee\dto\CertificationDto.class
 com\rmg\employee\dto\McqTestDto.class

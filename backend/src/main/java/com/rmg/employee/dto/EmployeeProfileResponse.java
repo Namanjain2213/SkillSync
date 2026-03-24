@@ -22,6 +22,7 @@ public class EmployeeProfileResponse {
     private LocalDateTime updatedAt;
     private List<CertificationDto> certifications;
     private List<McqTestDto> mcqTests;
+    private List<String> lockedSkills;
 
     public static EmployeeProfileResponse from(Employee e) {
         EmployeeProfileResponse r = new EmployeeProfileResponse();
@@ -55,8 +56,14 @@ public class EmployeeProfileResponse {
             td.setStatus(t.getStatus() != null ? t.getStatus().name() : null);
             td.setTestDate(t.getTestDate());
             td.setCompletedDate(t.getCompletedDate());
+            td.setAttemptNumber(t.getAttemptNumber() != null ? t.getAttemptNumber() : 1);
             return td;
         }).collect(Collectors.toList());
+        // Skills that have MCQ tests are locked — cannot be removed on profile update
+        r.lockedSkills = e.getMcqTests().stream()
+                .map(t -> t.getSkill())
+                .distinct()
+                .collect(Collectors.toList());
         return r;
     }
 
@@ -75,4 +82,5 @@ public class EmployeeProfileResponse {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public List<CertificationDto> getCertifications() { return certifications; }
     public List<McqTestDto> getMcqTests() { return mcqTests; }
+    public List<String> getLockedSkills() { return lockedSkills; }
 }

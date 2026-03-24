@@ -64,27 +64,11 @@ import { ToastService } from '../../shared/toast.service';
             <app-icon [name]="u.active ? 'check-circle' : 'x-circle'" [size]="12" color="currentColor"></app-icon>
             {{ u.active ? 'Active' : 'Inactive' }}
           </span>
-          <span class="status-badge status-bench" *ngIf="u.role === 'EMPLOYEE' && u.employeeStatus === 'ON_BENCH'" style="margin-left:4px">
-            On Bench
-          </span>
+
 
           <span class="date">{{ u.createdAt | date:'dd MMM yyyy' }}</span>
 
           <div class="actions">
-            <button class="action-btn bench-btn"
-                    *ngIf="u.role === 'EMPLOYEE' && u.employeeStatus !== 'ON_BENCH'"
-                    (click)="onBench(u)"
-                    title="On Bench">
-              <app-icon name="clock" [size]="14" color="currentColor"></app-icon>
-              On Bench
-            </button>
-            <button class="action-btn approve-btn"
-                    *ngIf="u.role === 'EMPLOYEE' && u.employeeStatus === 'ON_BENCH'"
-                    (click)="removeFromBench(u)"
-                    title="Approve">
-              <app-icon name="check-circle" [size]="14" color="currentColor"></app-icon>
-              Approve
-            </button>
             <button class="action-btn delete-btn" (click)="confirmDelete(u)" title="Delete">
               <app-icon name="x-circle" [size]="14" color="currentColor"></app-icon>
             </button>
@@ -198,7 +182,6 @@ import { ToastService } from '../../shared/toast.service';
     }
     .status-on  { background: #e8f5e9; color: #2e7d32; }
     .status-off { background: #ffebee; color: #c62828; }
-    .status-bench { background: #e3f2fd; color: #1565c0; }
 
     .date { font-size: 12px; color: #888; }
 

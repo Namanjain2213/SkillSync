@@ -13,13 +13,13 @@ import java.util.Optional;
 @Repository
 public interface ProjectApplicationRepository extends JpaRepository<ProjectApplication, Long> {
 
-    @Query("SELECT a FROM ProjectApplication a " +
+    // Fetch applications with employee and project — collections loaded separately via .size() calls in service
+    @Query("SELECT DISTINCT a FROM ProjectApplication a " +
            "JOIN FETCH a.employee e " +
            "JOIN FETCH a.project " +
-           "LEFT JOIN FETCH e.certifications " +
-           "LEFT JOIN FETCH e.mcqTests " +
-           "LEFT JOIN FETCH e.skills " +
-           "WHERE a.project.id = :projectId")
+           "JOIN FETCH e.user " +
+           "WHERE a.project.id = :projectId " +
+           "ORDER BY a.appliedAt DESC")
     List<ProjectApplication> findByProjectIdWithDetails(@Param("projectId") Long projectId);
 
     List<ProjectApplication> findByProjectId(Long projectId);

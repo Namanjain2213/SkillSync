@@ -457,10 +457,6 @@ export class EmployeeDashboardComponent implements OnInit {
       this.toast.warning('Your profile must be approved by HR before you can apply.');
       return;
     }
-    if (this.hasPendingTests()) {
-      this.toast.warning('You have pending skill tests. Please complete all mandatory tests before applying.');
-      return;
-    }
     this.applying = project.id;
     this.employeeService.applyToProject(project.id).subscribe({
       next: () => {
@@ -477,7 +473,14 @@ export class EmployeeDashboardComponent implements OnInit {
   }
 
   hasPendingTests(): boolean {
-    return this.profile?.mcqTests?.some((t: any) => t.status === 'PENDING') ?? false;
+    // Block only if there's a PENDING test for a skill with NO prior failed attempts
+    const tests: any[] = this.profile?.mcqTests ?? [];
+    return tests
+      .filter((t: any) => t.status === 'PENDING')
+      .some((t: any) => {
+        const hasFailedForSkill = tests.some((other: any) => other.skill === t.skill && other.status === 'FAILED');
+        return !hasFailedForSkill;
+      });
   }
 
   getInitial(): string { return (this.currentUser?.username?.[0] ?? 'U').toUpperCase(); }

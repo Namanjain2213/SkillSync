@@ -4,6 +4,7 @@ import com.rmg.employee.dto.*;
 import com.rmg.employee.model.*;
 import com.rmg.employee.repository.EmployeeRepository;
 import com.rmg.employee.repository.McqQuestionRepository;
+import com.rmg.employee.repository.McqTestRepository;
 import com.rmg.employee.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class EmployeeService {
     @Autowired private EmployeeRepository employeeRepository;
     @Autowired private UserRepository userRepository;
     @Autowired private McqQuestionRepository mcqQuestionRepository;
+    @Autowired private McqTestRepository mcqTestRepository;
 
     private static final List<String> MCQ_SKILLS = Arrays.asList("JAVA", "PYTHON", "AI_ML", "DOTNET");
     private static final String UPLOAD_DIR = "uploads/certifications/";
@@ -46,26 +48,45 @@ public class EmployeeService {
         employee.setContactNo(request.getContactNo());
         employee.setAddress(request.getAddress());
         employee.setHighestQualification(request.getHighestQualification());
-        employee.setSkills(request.getSkills());
         employee.setUpdatedAt(LocalDateTime.now());
 
+        // Skills that already have MCQ tests are locked — cannot be removed
+        // Use existing employee skills as source of truth for locked mandatory skills
+        List<String> existingSkills = employee.getSkills() != null ? new ArrayList<>(employee.getSkills()) : new ArrayList<>();
+        List<String> lockedSkills = existingSkills.stream()
+                .filter(s -> MCQ_SKILLS.contains(normalizeSkill(s)))
+                .collect(Collectors.toList());
+
+        // Merge: start with request skills, then add back any locked ones that were removed
+        List<String> mergedSkills = new ArrayList<>(request.getSkills() != null ? request.getSkills() : new ArrayList<>());
+        for (String locked : lockedSkills) {
+            boolean alreadyIn = mergedSkills.stream()
+                    .anyMatch(s -> normalizeSkill(s).equals(normalizeSkill(locked)));
+            if (!alreadyIn) {
+                mergedSkills.add(locked);
+            }
+        }
+        employee.setSkills(mergedSkills);
+
         employee = employeeRepository.save(employee);
-        createMcqTestsForSkills(employee, request.getSkills());
+        createMcqTestsForSkills(employee, mergedSkills);
         employee = employeeRepository.save(employee);
 
         return EmployeeProfileResponse.from(employee);
     }
 
+    private String normalizeSkill(String skill) {
+        if (skill == null) return "";
+        String s = skill.toUpperCase().replace(" ", "_").replace(".", "");
+        if (s.equals("NET") || s.equals("DOTNET")) return "DOTNET";
+        if (s.equals("AI/ML") || s.equals("AI_ML")) return "AI_ML";
+        return s;
+    }
+
     private void createMcqTestsForSkills(Employee employee, List<String> skills) {
         if (skills == null) return;
         for (String skill : skills) {
-            String normalizedSkill = skill.toUpperCase().replace(" ", "_").replace(".", "");
-            if (normalizedSkill.equals("NET") || normalizedSkill.equals("DOTNET") || skill.equalsIgnoreCase(".NET")) {
-                normalizedSkill = "DOTNET";
-            }
-            if (normalizedSkill.equals("AI/ML") || normalizedSkill.equals("AI_ML")) {
-                normalizedSkill = "AI_ML";
-            }
+            String normalizedSkill = normalizeSkill(skill);
             if (MCQ_SKILLS.contains(normalizedSkill)) {
                 final String finalSkill = normalizedSkill;
                 boolean testExists = employee.getMcqTests().stream()
@@ -102,16 +123,37 @@ public class EmployeeService {
         return fileName;
     }
 
-    @Transactional(readOnly = true)
+    private static final int MAX_ATTEMPTS = 3;
+
+    @Transactional
     public McqTestResponse generateTest(String employeeId, String skill) {
         User user = findUser(employeeId);
         Employee employee = employeeRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Employee profile not found"));
 
-        McqTest test = employee.getMcqTests().stream()
-                .filter(t -> t.getSkill().equals(skill) && t.getStatus() == TestStatus.PENDING)
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Test not found or already completed for skill: " + skill));
+        // Use direct DB queries — avoids lazy-load stale cache issues
+        long totalAttempts = mcqTestRepository.countByEmployeeIdAndSkill(employee.getId(), skill);
+        boolean alreadyPassed = mcqTestRepository
+                .countByEmployeeIdAndSkillAndStatus(employee.getId(), skill, TestStatus.PASSED) > 0;
+
+        if (alreadyPassed) {
+            throw new RuntimeException("You have already passed the " + skill + " test.");
+        }
+        if (totalAttempts >= MAX_ATTEMPTS) {
+            throw new RuntimeException("ATTEMPT_LIMIT_REACHED:" + skill);
+        }
+
+        McqTest test = mcqTestRepository
+                .findByEmployeeIdAndSkillAndStatus(employee.getId(), skill, TestStatus.PENDING)
+                .orElseGet(() -> {
+                    // Auto-create PENDING test if missing (handles legacy failed tests without retry record)
+                    McqTest retry = new McqTest();
+                    retry.setEmployee(employee);
+                    retry.setSkill(skill);
+                    retry.setTestDate(LocalDateTime.now());
+                    retry.setAttemptNumber((int) totalAttempts + 1);
+                    return mcqTestRepository.save(retry);
+                });
 
         List<McqQuestion> easy     = mcqQuestionRepository.findRandomQuestionsBySkillAndDifficulty(skill, "EASY",     10);
         List<McqQuestion> moderate = mcqQuestionRepository.findRandomQuestionsBySkillAndDifficulty(skill, "MODERATE", 10);
@@ -152,9 +194,7 @@ public class EmployeeService {
         Employee employee = employeeRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Employee profile not found"));
 
-        McqTest test = employee.getMcqTests().stream()
-                .filter(t -> t.getId().equals(request.getTestId()))
-                .findFirst()
+        McqTest test = mcqTestRepository.findById(request.getTestId())
                 .orElseThrow(() -> new RuntimeException("Test not found"));
 
         int correctAnswers = 0;
@@ -169,8 +209,26 @@ public class EmployeeService {
         test.setCorrectAnswers(correctAnswers);
         test.setScore(score);
         test.setCompletedDate(LocalDateTime.now());
-        test.setStatus(score >= 60 ? TestStatus.PASSED : TestStatus.FAILED);
-        employeeRepository.save(employee);
+        boolean passed = score >= 60;
+        test.setStatus(passed ? TestStatus.PASSED : TestStatus.FAILED);
+        mcqTestRepository.save(test);
+
+        // Count completed (non-PENDING) attempts for this skill from DB
+        long attemptsUsed = mcqTestRepository.countByEmployeeIdAndSkillAndStatus(employee.getId(), test.getSkill(), TestStatus.FAILED)
+                + mcqTestRepository.countByEmployeeIdAndSkillAndStatus(employee.getId(), test.getSkill(), TestStatus.PASSED);
+
+        int remainingAttempts = 0;
+        if (!passed) {
+            remainingAttempts = (int) Math.max(0, MAX_ATTEMPTS - attemptsUsed);
+            if (remainingAttempts > 0) {
+                McqTest retryTest = new McqTest();
+                retryTest.setEmployee(employee);
+                retryTest.setSkill(test.getSkill());
+                retryTest.setTestDate(LocalDateTime.now());
+                retryTest.setAttemptNumber((int) attemptsUsed + 1);
+                mcqTestRepository.save(retryTest);
+            }
+        }
 
         McqTestDto dto = new McqTestDto();
         dto.setId(test.getId());
@@ -181,6 +239,8 @@ public class EmployeeService {
         dto.setStatus(test.getStatus().name());
         dto.setTestDate(test.getTestDate());
         dto.setCompletedDate(test.getCompletedDate());
+        dto.setAttemptNumber(test.getAttemptNumber() != null ? test.getAttemptNumber() : 1);
+        dto.setRemainingAttempts(remainingAttempts);
         return dto;
     }
 
@@ -188,7 +248,11 @@ public class EmployeeService {
     public EmployeeProfileResponse getProfile(String employeeId) {
         User user = findUser(employeeId);
         return employeeRepository.findByUserId(user.getId())
-                .map(EmployeeProfileResponse::from)
+                .map(emp -> {
+                    // Force-load mcqTests so lockedSkills is populated correctly
+                    emp.getMcqTests().size();
+                    return EmployeeProfileResponse.from(emp);
+                })
                 .orElse(null);
     }
 }

@@ -11,6 +11,13 @@ public class McqTestDto {
     private String status;
     private LocalDateTime testDate;
     private LocalDateTime completedDate;
+    private Integer attemptNumber;
+    private Integer remainingAttempts;
+
+    public Integer getAttemptNumber() { return attemptNumber; }
+    public void setAttemptNumber(Integer attemptNumber) { this.attemptNumber = attemptNumber; }
+    public Integer getRemainingAttempts() { return remainingAttempts; }
+    public void setRemainingAttempts(Integer remainingAttempts) { this.remainingAttempts = remainingAttempts; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

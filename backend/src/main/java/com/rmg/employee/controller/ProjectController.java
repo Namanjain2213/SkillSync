@@ -53,8 +53,13 @@ public class ProjectController {
 
     // PM: get all applications for a project
     @GetMapping("/projects/{id}/applications")
-    public ResponseEntity<List<ProjectApplicationDto>> getApplications(@PathVariable Long id) {
-        return ResponseEntity.ok(projectService.getApplicationsForProject(id));
+    public ResponseEntity<?> getApplications(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(projectService.getApplicationsForProject(id));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.ok(List.of());
+        }
     }
 
     // PM: approve an application

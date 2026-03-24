@@ -19,8 +19,8 @@ import { ToastService } from '../../shared/toast.service';
           <app-icon name="user" [size]="28" color="#fff"></app-icon>
         </div>
         <div>
-          <h1>Create Your Profile</h1>
-          <p>Fill in your details to get started</p>
+          <h1>{{ isExistingProfile ? 'Update Your Profile' : 'Create Your Profile' }}</h1>
+          <p>{{ isExistingProfile ? 'Edit your details below' : 'Fill in your details to get started' }}</p>
         </div>
       </div>
 
@@ -182,11 +182,15 @@ import { ToastService } from '../../shared/toast.service';
 
             <!-- Selected skills -->
             <div class="selected-skills" *ngIf="skills.length > 0">
-              <span class="selected-chip" *ngFor="let s of skills; let i = index">
+              <span class="selected-chip" *ngFor="let s of skills; let i = index"
+                    [class.locked-chip]="isLocked(s)">
                 {{ s }}
-                <button type="button" (click)="removeSkill(i)">
+                <button type="button" *ngIf="!isLocked(s)" (click)="removeSkill(i)">
                   <app-icon name="x-circle" [size]="11" color="#6366f1"></app-icon>
                 </button>
+                <span *ngIf="isLocked(s)" class="lock-icon" title="Cannot remove — MCQ test assigned">
+                  <app-icon name="lock" [size]="11" color="#f59e0b"></app-icon>
+                </span>
               </span>
             </div>
             <div class="err-row" *ngIf="submitAttempted && skills.length === 0">
@@ -204,10 +208,11 @@ import { ToastService } from '../../shared/toast.service';
             <button type="submit" class="submit-btn" [disabled]="loading">
               <span *ngIf="!loading" style="display:flex;align-items:center;gap:8px">
                 <app-icon name="check-circle" [size]="18" color="#fff"></app-icon>
-                Create Profile
+                {{ isExistingProfile ? 'Update Profile' : 'Create Profile' }}
               </span>
               <span *ngIf="loading" style="display:flex;align-items:center;gap:8px">
-                <div class="spinner"></div> Creating...
+                <div class="spinner"></div>
+                {{ isExistingProfile ? 'Updating...' : 'Creating...' }}
               </span>
             </button>
 
@@ -396,6 +401,8 @@ import { ToastService } from '../../shared/toast.service';
       background: none; border: none; cursor: pointer; padding: 0;
       display: flex; align-items: center;
     }
+    .locked-chip { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .lock-icon { display: flex; align-items: center; }
 
     .mcq-notice {
       display: flex; align-items: center; gap: 8px;
@@ -475,6 +482,9 @@ export class ProfileFormComponent implements OnInit {
   });
 
   skills: string[] = [];
+  lockedSkills: string[] = [];
+  originalLockedSkills: string[] = []; // exact display names of mandatory skills present at load time
+  isExistingProfile = false;
   loading = false;
   submitAttempted = false;
 
@@ -500,11 +510,17 @@ export class ProfileFormComponent implements OnInit {
     this.employeeService.getProfile().subscribe({
       next: (p) => {
         if (p) {
+          this.isExistingProfile = true;
           this.form.patchValue({
             name: p.name, email: p.email, contactNo: p.contactNo,
             address: p.address, highestQualification: p.highestQualification
           });
           this.skills = p.skills || [];
+          this.lockedSkills = p.lockedSkills || [];
+          // Track which mandatory skills were already present — these cannot be removed
+          const mandatoryNorms = ['java', 'python', 'aiml', 'net', 'dotnet'];
+          const norm = (s: string) => s.toLowerCase().replace(/[\s_]/g, '').replace('.', '');
+          this.originalLockedSkills = this.skills.filter(s => mandatoryNorms.includes(norm(s)));
         }
       },
       error: () => {}
@@ -542,10 +558,25 @@ export class ProfileFormComponent implements OnInit {
     return Math.min(score, 100);
   }
 
+  isLocked(skill: string): boolean {
+    if (!this.isExistingProfile) return false;
+    // A skill is locked if it's a mandatory MCQ skill that was already in the profile when loaded
+    const norm = (s: string) => s.toLowerCase().replace(/[\s_]/g, '').replace('.', '');
+    const mandatoryNorms = ['java', 'python', 'aiml', 'net', 'dotnet'];
+    return mandatoryNorms.includes(norm(skill)) && this.originalLockedSkills.includes(skill);
+  }
+
   toggleSkill(skill: string): void {
     const idx = this.skills.indexOf(skill);
-    if (idx === -1) this.skills.push(skill);
-    else this.skills.splice(idx, 1);
+    if (idx === -1) {
+      this.skills.push(skill);
+    } else {
+      if (this.isLocked(skill)) {
+        this.toast.error(`"${skill}" cannot be removed — it has an MCQ test assigned.`);
+        return;
+      }
+      this.skills.splice(idx, 1);
+    }
   }
 
   addCustomSkill(val: string): void {
@@ -553,7 +584,14 @@ export class ProfileFormComponent implements OnInit {
     if (s && !this.skills.includes(s)) this.skills.push(s);
   }
 
-  removeSkill(i: number): void { this.skills.splice(i, 1); }
+  removeSkill(i: number): void {
+    const skill = this.skills[i];
+    if (this.isLocked(skill)) {
+      this.toast.error(`"${skill}" cannot be removed — it has an MCQ test assigned.`);
+      return;
+    }
+    this.skills.splice(i, 1);
+  }
 
   onSubmit(): void {
     this.submitAttempted = true;
@@ -563,12 +601,12 @@ export class ProfileFormComponent implements OnInit {
     this.employeeService.createProfile({ ...this.form.value as any, skills: this.skills }).subscribe({
       next: () => {
         this.loading = false;
-        this.toast.success('Profile created successfully!');
+        this.toast.success(this.isExistingProfile ? 'Profile updated successfully!' : 'Profile created successfully!');
         this.router.navigate(['/employee']);
       },
       error: () => {
         this.loading = false;
-        this.toast.error('Error creating profile. Please try again.');
+        this.toast.error(this.isExistingProfile ? 'Error updating profile.' : 'Error creating profile. Please try again.');
       }
     });
   }

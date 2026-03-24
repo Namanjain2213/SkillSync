@@ -27,6 +27,7 @@ F:\RMGManagement\backend\src\main\java\com\rmg\employee\EmployeeManagementApplic
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\service\ProjectService.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\ProfileStatus.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\controller\AuthController.java
+F:\RMGManagement\backend\src\main\java\com\rmg\employee\repository\McqTestRepository.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\dto\McqTestDto.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\service\AdminService.java
 F:\RMGManagement\backend\src\main\java\com\rmg\employee\model\Employee.java

@@ -144,14 +144,9 @@ public class ProjectService {
         Employee employee = employeeRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Employee profile not found"));
 
+        // HR approval is the final verification — if approved, employee can apply directly.
         if (employee.getStatus() != ProfileStatus.APPROVED) {
-            throw new RuntimeException("Only employees with APPROVED profile can apply.");
-        }
-
-        boolean hasPendingTests = employee.getMcqTests().stream()
-                .anyMatch(t -> t.getStatus() == TestStatus.PENDING);
-        if (hasPendingTests) {
-            throw new RuntimeException("You have pending skill tests. Please complete all mandatory tests before applying to a project.");
+            throw new RuntimeException("Only employees with an HR-approved profile can apply to projects.");
         }
 
         Project project = projectRepository.findById(projectId)
@@ -164,13 +159,34 @@ public class ProjectService {
         ProjectApplication app = new ProjectApplication();
         app.setProject(project);
         app.setEmployee(employee);
-        return ProjectApplicationDto.from(applicationRepository.save(app));
+        ProjectApplication saved = applicationRepository.save(app);
+        // Force-init lazy collections before DTO mapping
+        employee.getSkills().size();
+        employee.getCertifications().size();
+        employee.getMcqTests().size();
+        return ProjectApplicationDto.from(saved);
     }
 
     // ── Get all applications for a project (PM view) ───────────────────────────
-    @Transactional(readOnly = true)
+    @Transactional
     public List<ProjectApplicationDto> getApplicationsForProject(Long projectId) {
-        return applicationRepository.findByProjectIdWithDetails(projectId).stream()
+        // Use simple query to avoid MultipleBagFetchException, then force-init lazily
+        List<ProjectApplication> apps = applicationRepository.findByProjectIdWithDetails(projectId);
+        // Force-initialize all lazy collections within the transaction before DTO mapping
+        for (ProjectApplication app : apps) {
+            Employee emp = app.getEmployee();
+            // Initialize ElementCollection (skills) — must call size() to trigger load
+            emp.getSkills().size();
+            // Initialize OneToMany collections
+            emp.getCertifications().size();
+            emp.getMcqTests().size();
+            // Touch each element to ensure Hibernate proxies are fully initialized
+            emp.getCertifications().forEach(c -> c.getName());
+            emp.getMcqTests().forEach(t -> t.getSkill());
+            // Ensure user is loaded (should be EAGER via @OneToOne but touch it anyway)
+            emp.getUser().getUsername();
+        }
+        return apps.stream()
                 .map(ProjectApplicationDto::from)
                 .collect(Collectors.toList());
     }
@@ -184,11 +200,11 @@ public class ProjectService {
         app.setPmNote(note);
         app.setUpdatedAt(LocalDateTime.now());
         applicationRepository.save(app);
-        // re-fetch with full details to avoid lazy loading issues
-        return applicationRepository.findByProjectIdWithDetails(app.getProject().getId())
-                .stream().filter(a -> a.getId().equals(applicationId))
-                .map(ProjectApplicationDto::from).findFirst()
-                .orElseThrow();
+        // Force-initialize lazy collections before mapping
+        app.getEmployee().getSkills().size();
+        app.getEmployee().getCertifications().size();
+        app.getEmployee().getMcqTests().size();
+        return ProjectApplicationDto.from(app);
     }
 
     @Transactional
@@ -199,10 +215,10 @@ public class ProjectService {
         app.setPmNote(note);
         app.setUpdatedAt(LocalDateTime.now());
         applicationRepository.save(app);
-        return applicationRepository.findByProjectIdWithDetails(app.getProject().getId())
-                .stream().filter(a -> a.getId().equals(applicationId))
-                .map(ProjectApplicationDto::from).findFirst()
-                .orElseThrow();
+        app.getEmployee().getSkills().size();
+        app.getEmployee().getCertifications().size();
+        app.getEmployee().getMcqTests().size();
+        return ProjectApplicationDto.from(app);
     }
 
     // ── Get employee's own applications ────────────────────────────────────────
