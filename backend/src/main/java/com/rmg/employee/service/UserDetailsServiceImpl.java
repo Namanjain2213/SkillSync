@@ -24,7 +24,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getEmployeeId(),
                 user.getPassword(),
-                user.isActive(),   // enabled
+                user.getRole() == com.rmg.employee.model.Role.ADMIN ? true : user.isActive(), // admins always enabled
                 true,              // accountNonExpired
                 true,              // credentialsNonExpired
                 true,              // accountNonLocked

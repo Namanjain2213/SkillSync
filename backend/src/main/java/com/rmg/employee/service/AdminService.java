@@ -71,8 +71,8 @@ public class AdminService {
             case ADMIN           -> "ADM";
         };
 
-        // Count existing users of this role and find next available ID
-        long count = userRepository.countByRole(role) + 1;
+        // Start from 1 and find first unused ID — safe even after deletions
+        long count = 1;
         String id;
         do {
             id = prefix + String.format("%03d", count);
@@ -121,13 +121,26 @@ public class AdminService {
 
     @Transactional
     public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+
+        // ADM001 is the super admin — cannot be deleted
+        if ("ADM001".equals(user.getEmployeeId())) {
+            throw new RuntimeException("Super admin (ADM001) cannot be deleted.");
+        }
+
         employeeRepository.findByUserId(userId).ifPresent(emp -> {
             // Delete project applications first (FK on employee_id)
             projectApplicationRepository.deleteAll(projectApplicationRepository.findByEmployeeId(emp.getId()));
-            // Employee delete cascades certifications, mcqTests, skills
+            // Clear skills collection explicitly to avoid FK constraint issues
+            emp.getSkills().clear();
+            employeeRepository.saveAndFlush(emp);
+            // Employee delete cascades certifications and mcqTests
             employeeRepository.delete(emp);
+            employeeRepository.flush();
         });
-        userRepository.deleteById(userId);
+
+        userRepository.delete(user);
     }
 
     public AdminStatsDto getStats() {

@@ -69,9 +69,14 @@ import { ToastService } from '../../shared/toast.service';
           <span class="date">{{ u.createdAt | date:'dd MMM yyyy' }}</span>
 
           <div class="actions">
-            <button class="action-btn delete-btn" (click)="confirmDelete(u)" title="Delete">
+            <button class="action-btn delete-btn"
+              *ngIf="u.employeeId !== 'ADM001'"
+              (click)="confirmDelete(u)" title="Delete">
               <app-icon name="x-circle" [size]="14" color="currentColor"></app-icon>
             </button>
+            <span class="protected-badge" *ngIf="u.employeeId === 'ADM001'" title="Super Admin — cannot be deleted">
+              <app-icon name="shield" [size]="14" color="#7b1fa2"></app-icon>
+            </span>
           </div>
         </div>
 
@@ -201,6 +206,11 @@ import { ToastService } from '../../shared/toast.service';
     .approve-btn:hover { background: #c8e6c9; }
     .delete-btn { background: #ffebee; color: #c62828; padding: 6px 8px; }
     .delete-btn:hover { background: #ffcdd2; }
+    .protected-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: 8px;
+      background: #f3e5f5; cursor: default;
+    }
 
     .empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 48px; color: #999; font-size: 14px; }
 
@@ -311,7 +321,13 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  confirmDelete(user: any): void { this.deleteTarget = user; }
+  confirmDelete(user: any): void {
+    if (user.employeeId === 'ADM001') {
+      this.toast.error('Super admin (ADM001) cannot be deleted.');
+      return;
+    }
+    this.deleteTarget = user;
+  }
 
   deleteUser(): void {
     if (!this.deleteTarget) return;
@@ -321,7 +337,16 @@ export class AdminUsersComponent implements OnInit {
         this.allUsers = this.allUsers.filter(u => u.id !== this.deleteTarget.id);
         this.deleteTarget = null;
       },
-      error: () => this.toast.error('Failed to delete user.')
+      error: (err) => {
+        this.deleteTarget = null;
+        if (err.status === 403) {
+          this.toast.error('Access denied. Please log out and log in again as Admin.');
+        } else if (err.status === 400 && err.error?.error) {
+          this.toast.error(err.error.error);
+        } else {
+          this.toast.error('Failed to delete user.');
+        }
+      }
     });
   }
 
